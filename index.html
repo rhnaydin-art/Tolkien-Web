@@ -6,9 +6,9 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Tolkien Günlükleri | Orta Dünya Kütüphanesi</title>
     <!-- Tailwind CSS -->
-    <script src="https://frwmpokqgnsdpsumfobp.supabase.co"></script>
-    <!-- Supabase JS Library -->
-    <script src="sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Library (CDN Geri Yüklendi) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
@@ -111,7 +111,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Kopyalamaya Karşı Mühür (User Selection Protection) */
+        /* Kopyalamaya Karşı Mühür */
         .copy-protected {
             user-select: none !important;
             -webkit-user-select: none !important;
@@ -160,13 +160,13 @@
         </div>
     </footer>
 
-    <!-- YÖNETİCİ GİRİŞ MODALI (GÜVENLİ HİBRİT TASARIM) -->
+    <!-- YÖNETİCİ GİRİŞ MODALI -->
     <div id="loginModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-zinc-950 p-8 rounded-xl border border-zinc-800 w-full max-w-md shadow-2xl relative">
             <h3 class="text-2xl font-epic text-white tracking-wider mb-2 text-center" id="login-modal-title">Arşiv Sorumlusu</h3>
             <p class="text-xs text-zinc-500 font-sans text-center mb-8 uppercase tracking-widest" id="login-modal-subtitle">Giriş izni gereklidir</p>
             
-            <!-- Email Field (Sadece Supabase aktifse gösterilir) -->
+            <!-- Email Field -->
             <div id="email-field-container" class="hidden mb-4">
                 <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-2 font-sans">Yönetici E-Posta</label>
                 <input type="email" id="adminEmail" placeholder="ornek@domain.com" class="w-full bg-black p-4 rounded border border-zinc-800 focus:border-amber-500 text-white text-center outline-none">
@@ -355,13 +355,12 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🛡️ KADİM SUNUCU KİLİTLEME AYARLARI
-        // ==========================================
-        // Burayı VS Code ile kendi bilgilerine göre doldur ve kaydet!
-        const SUPABASE_URL = ""; // Kendi Supabase URL'ini buraya yaz
-        const SUPABASE_KEY = ""; // Kendi Anon Key'ini buraya yaz
-        // ==========================================
+        // =========================================================================
+        // 🛡️ KADİM SUNUCU KİLİTLEME AYARLARI (SENİN GERÇEK BİLGİLERİN YERLEŞTİRİLDİ!)
+        // =========================================================================
+        const SUPABASE_URL = "https://frwmpokqgnsdpsumfobp.supabase.co"; // Kendi Supabase URL'ini buraya yaz
+        const SUPABASE_KEY = "sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"; // Kendi Anon Key'ini buraya yaz
+        // =========================================================================
 
         let appSettings = JSON.parse(localStorage.getItem('app_settings')) || {
             homeBg: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000',
@@ -493,7 +492,6 @@
         ];
 
         function initSupabase() {
-            // Sıkı kilit koruması: Kodun en üstündeki sabit değişkenleri veya varsa tarayıcı hafızasını oku
             const url = SUPABASE_URL || localStorage.getItem('sb_url');
             const key = SUPABASE_KEY || localStorage.getItem('sb_key');
             const badge = document.getElementById('db-status-badge');
@@ -511,7 +509,6 @@
                         badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] tracking-widest border border-emerald-500/30 text-emerald-400 bg-emerald-950/20";
                     }
                     
-                    // Supabase aktif: Sadece e-posta ve şifreli güvenli giriş aktif edilir
                     if (emailField) emailField.classList.remove('hidden');
                     if (passLabel) passLabel.classList.remove('hidden');
                     if (passInput) {
@@ -520,7 +517,6 @@
                     }
                     if (loginSubtitle) loginSubtitle.textContent = "Supabase Güvenli Oturumu";
                     
-                    // Supabase kilitliyse yönetim panelindeki hassa ayar butonunu tamamen uçur
                     const sbBtn = document.getElementById('admin-supabase-btn');
                     if (sbBtn && SUPABASE_URL) sbBtn.classList.add('hidden');
                     
@@ -533,7 +529,6 @@
                 badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] tracking-widest border border-red-500/30 text-red-400 bg-red-950/20";
             }
             
-            // Supabase yok: Klasik test şifresine dön
             if (emailField) emailField.classList.add('hidden');
             if (passLabel) passLabel.classList.add('hidden');
             if (passInput) {
@@ -554,12 +549,11 @@
                 try {
                     const { data, error } = await supabaseClient.from('articles').select('*').order('created_at', { ascending: false });
                     
-                    // Veritabanı canlı ama tamamen boşsa otomatik seeder butonunu göster
                     const seedBtn = document.getElementById('db-seed-btn');
                     if (!error && data) {
                         if (data.length === 0) {
                             if (seedBtn) seedBtn.classList.remove('hidden');
-                            articles = [...defaultArticles]; // Çökmesin diye fallback veriler yüklendi
+                            articles = [...defaultArticles]; 
                         } else {
                             if (seedBtn) seedBtn.classList.add('hidden');
                             articles = data;
@@ -640,7 +634,6 @@
     </script>
 
     <script>
-        // Mistik Veritabanı Doldurucu (Database Seeder)
         async function seedDatabase() {
             if (!supabaseClient) {
                 showToast("Lütfen önce canlı bağlantıyı kurun!", true);
@@ -650,7 +643,6 @@
                 showToast("Veritabanı mühürleniyor... Lütfen bekleyin.");
                 document.getElementById('db-seed-btn').textContent = "⌛ Aktarılıyor...";
                 
-                // defaultArticles dizisindeki elemanları ID'lerinden arındırarak gönderiyoruz (Supabase kendi üretsin)
                 const seedData = defaultArticles.map(({ id, ...rest }) => rest);
                 
                 const { error } = await supabaseClient.from('articles').insert(seedData);
@@ -1191,7 +1183,6 @@
                 tabSel.appendChild(opt);
             });
 
-            // Hardlock kontrolüne göre Supabase ayarlarını göster/gizle
             const sbBtn = document.getElementById('admin-supabase-btn');
             if (sbBtn) {
                 if (SUPABASE_URL) {
@@ -1567,7 +1558,6 @@
             }
         });
 
-        // Kopyalamayı Engelleme (Copy Protection Guard)
         document.addEventListener('copy', (e) => {
             const activeEl = document.activeElement;
             if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
