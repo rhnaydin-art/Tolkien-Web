@@ -106,9 +106,9 @@
             </div>
             <div class="flex items-center gap-4">
                 <!-- Veritabanı Bağlantı Göstergesi -->
-                <div id="db-status-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-700/30 text-amber-300 font-sans text-[10px] uppercase tracking-wider">
+                <div id="db-status-badge" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-700/30 text-amber-300 font-sans text-[10px] uppercase tracking-wider">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span>Bağlanıyor...</span>
+                    <span>Bağlantı Kuruluyor...</span>
                 </div>
                 <button onclick="openAdminModal()" class="font-cinzel text-xs uppercase tracking-widest text-stone-400 hover:text-amber-400 border border-stone-800 hover:border-amber-700/50 px-4 py-2 rounded transition duration-300 bg-stone-950/50 shadow-inner">
                     🏰 Yönetim
@@ -161,7 +161,7 @@
     <!-- YÖNETİM MODAL VE PANELI -->
     <div id="admin-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         
-        <!-- KAPI 1: SHA-256 ŞİFRE EKRANI -->
+        <!-- 1. KAPI: GEÇİT KELİMESİ EKRANI (SHA-256 KONTROLÜ) -->
         <div id="admin-login-card" class="bg-stone-950 border border-amber-900/40 p-6 sm:p-8 rounded-2xl max-w-sm w-full text-center gold-glow">
             <span class="text-4xl mb-4 block">🔑</span>
             <h3 class="font-cinzel text-lg text-amber-500 uppercase tracking-widest mb-6">Arşiv Giriş Mührü</h3>
@@ -172,18 +172,24 @@
             </div>
         </div>
 
-        <!-- KAPI 2: SUPABASE AUTH EKRANI -->
+        <!-- 2. KAPI: SUPABASE CANLI KIMLIK DOĞRULAMA (AUTH) EKRANI -->
         <div id="supabase-auth-card" class="bg-stone-950 border border-amber-900/40 p-6 sm:p-8 rounded-2xl max-w-sm w-full text-center gold-glow hidden">
             <span class="text-4xl mb-4 block">🛡️</span>
-            <h3 class="font-cinzel text-lg text-emerald-500 uppercase tracking-widest mb-2">Veritabanı Kimliği</h3>
-            <p class="text-[10px] text-stone-400 mb-6 font-sans">İçerik eklemek için Supabase yönetici hesabınızla bağlanın.</p>
-            
-            <input type="email" id="sb-email" placeholder="Supabase E-Posta Adresi" class="w-full bg-stone-900 border border-amber-950 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-center text-white mb-3 font-sans text-sm">
-            <input type="password" id="sb-pass" placeholder="Supabase Şifresi" class="w-full bg-stone-900 border border-amber-950 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-center text-white mb-6 font-sans text-sm">
-            
+            <h3 class="font-cinzel text-sm text-amber-500 uppercase tracking-widest mb-2">Supabase Canlı Doğrulama</h3>
+            <p class="text-xs text-stone-400 mb-6 font-sans">Veritabanına güvenli yazma yetkisi için e-posta ve şifrenizi girin.</p>
+            <div class="space-y-4 text-left font-sans text-xs mb-6">
+                <div>
+                    <label class="block text-stone-500 mb-1">Yönetici E-Posta</label>
+                    <input type="email" id="auth-email" placeholder="ornek@domain.com" class="w-full bg-stone-900 border border-zinc-800 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-white">
+                </div>
+                <div>
+                    <label class="block text-stone-500 mb-1">Güvenli Şifre</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full bg-stone-900 border border-zinc-800 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-white">
+                </div>
+            </div>
             <div class="flex gap-3">
                 <button onclick="closeAdminModal()" class="w-1/2 border border-stone-800 text-stone-400 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-stone-900 transition">İptal</button>
-                <button id="sb-login-btn" onclick="loginSupabaseAuth()" class="w-1/2 bg-emerald-900/60 border border-emerald-500/40 text-emerald-200 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-emerald-800/80 transition">Bağlan</button>
+                <button onclick="loginWithSupabaseAuth()" class="w-1/2 bg-emerald-900/60 border border-emerald-500/40 text-emerald-200 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-emerald-800/80 transition">Veritabanına Bağlan</button>
             </div>
         </div>
 
@@ -197,8 +203,8 @@
                     <h3 class="font-cinzel text-sm sm:text-base text-amber-500 uppercase tracking-widest font-bold">Kraliyet Arşiv Ofisi</h3>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="logoutSupabaseAuth()" class="border border-stone-800 text-stone-400 hover:text-red-400 hover:border-red-900/50 px-4 py-1.5 rounded transition duration-300 bg-stone-950/50 text-xs font-sans">
-                        🚪 Çıkış Yap
+                    <button onclick="logoutAdmin()" class="bg-red-950/40 hover:bg-red-900/50 border border-red-700/40 text-red-300 px-3 py-1.5 rounded-lg text-xs font-sans transition">
+                        🔒 Güvenli Çıkış
                     </button>
                     <button onclick="closeAdminModal()" class="text-stone-400 hover:text-white transition text-xl">&times;</button>
                 </div>
@@ -341,71 +347,22 @@
     <!-- JAVASCRIPT ÇEKİRDEK MOTORU -->
     <script>
         // =========================================================================
-        // 🔑 SUPABASE CANLI BAĞLANTI AYARLARI (GÜVENLİ & SABİT)
+        // 🔑 GÜVENLİK VE BAĞLANTI AYARLARI 
         // =========================================================================
-        const SUPABASE_URL = "https://frwmpokqgnsdpsumfobp.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"; 
-        
-        // 🔒 "KAPI 1" GÜVENLİK ANAHTARI (SHA-256 HASH)
+        const SUPABASE_URL = "https://frwmpokqgnsdpsumfobp.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj";
         const ADMIN_PASSWORD_HASH = "103259ce93031a9d07c0af5a82b189f6300e2f241f7cbd65351def8e40a57cd9";
-
-        // =========================================================================
-        // 🛡️ WEB CRYPTO API İLE GÜVENLİK MOTORU (DOKUNMA)
-        // =========================================================================
-        async function hashText(text) {
-            const msgUint8 = new TextEncoder().encode(text);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
 
         // =========================================================================
         // 🔮 KÜTÜPHANE AYARLARI VE GLOBAL STATE
         // =========================================================================
         const IRKLAR = {
-            "Elfler": { 
-                glow: "shadow-emerald-500/20", 
-                border: "border-emerald-950/40", 
-                accent: "text-emerald-400", 
-                bg: "#05160e",
-                bgGradient: "radial-gradient(circle, #082417 0%, #030d08 100%)"
-            },
-            "Cüceler": { 
-                glow: "shadow-amber-600/20", 
-                border: "border-amber-950/40", 
-                accent: "text-amber-500", 
-                bg: "#160e05",
-                bgGradient: "radial-gradient(circle, #241708 0%, #0d0803 100%)"
-            },
-            "İnsanlar": { 
-                glow: "shadow-sky-500/20", 
-                border: "border-sky-950/40", 
-                accent: "text-sky-400", 
-                bg: "#051116",
-                bgGradient: "radial-gradient(circle, #081d24 0%, #030a0d 100%)"
-            },
-            "Hobbitler": { 
-                glow: "shadow-lime-600/20", 
-                border: "border-lime-950/40", 
-                accent: "text-lime-400", 
-                bg: "#0d1605",
-                bgGradient: "radial-gradient(circle, #152408 0%, #080d03 100%)"
-            },
-            "Süper Güçler": { 
-                glow: "shadow-purple-600/20", 
-                border: "border-purple-950/40", 
-                accent: "text-purple-400", 
-                bg: "#100516",
-                bgGradient: "radial-gradient(circle, #1d0824 0%, #0a030d 100%)"
-            },
-            "Karanlık Güçler": { 
-                glow: "shadow-red-600/20", 
-                border: "border-red-950/40", 
-                accent: "text-red-500", 
-                bg: "#140404",
-                bgGradient: "radial-gradient(circle, #200606 0%, #080202 100%)"
-            }
+            "Elfler": { glow: "shadow-emerald-500/20", border: "border-emerald-950/40", accent: "text-emerald-400", bg: "#05160e", bgGradient: "radial-gradient(circle, #082417 0%, #030d08 100%)" },
+            "Cüceler": { glow: "shadow-amber-600/20", border: "border-amber-950/40", accent: "text-amber-500", bg: "#160e05", bgGradient: "radial-gradient(circle, #241708 0%, #0d0803 100%)" },
+            "İnsanlar": { glow: "shadow-sky-500/20", border: "border-sky-950/40", accent: "text-sky-400", bg: "#051116", bgGradient: "radial-gradient(circle, #081d24 0%, #030a0d 100%)" },
+            "Hobbitler": { glow: "shadow-lime-600/20", border: "border-lime-950/40", accent: "text-lime-400", bg: "#0d1605", bgGradient: "radial-gradient(circle, #152408 0%, #080d03 100%)" },
+            "Süper Güçler": { glow: "shadow-purple-600/20", border: "border-purple-950/40", accent: "text-purple-400", bg: "#100516", bgGradient: "radial-gradient(circle, #1d0824 0%, #0a030d 100%)" },
+            "Karanlık Güçler": { glow: "shadow-red-600/20", border: "border-red-950/40", accent: "text-red-500", bg: "#140404", bgGradient: "radial-gradient(circle, #200606 0%, #080202 100%)" }
         };
 
         const SEKMELER = ["Yazıtlar", "Karakterler", "Görseller"];
@@ -415,13 +372,18 @@
             currentTab: "Yazıtlar",
             articles: [],
             activeArticle: null,
-            bgSettings: {
-                home: "",
-                races: {}
-            }
+            bgSettings: { home: "", races: {} }
         };
 
         let supabaseClient = null;
+
+        // SHA-256 Şifre Motoru
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
         // =========================================================================
         // 🔒 KOPYALAMA VE SAĞ TIK ENGELEME KALKANI
@@ -448,7 +410,6 @@
             initSupabase();
             buildRaceTabs();
             buildTabNavigation();
-            loadArticles();
         });
 
         // =========================================================================
@@ -458,12 +419,65 @@
             const badge = document.getElementById('db-status-badge');
             try {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>Supabase Bağlı</span>`;
-                badge.classList.remove('bg-amber-950/40', 'border-amber-700/30', 'text-amber-300');
-                badge.classList.add('bg-emerald-950/40', 'border-emerald-700/30', 'text-emerald-300');
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>Supabase Canlı</span>`;
+                badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-700/30 text-emerald-300 font-sans text-[10px] uppercase tracking-wider";
+                loadArticles();
             } catch (err) {
-                console.error("Supabase başlatma hatası:", err);
+                console.error("Supabase bağlantı hatası:", err);
                 badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Bağlantı Hatası</span>`;
+            }
+        }
+
+        // =========================================================================
+        // 📊 ARŞİV VERİLERİNİ YÜKLEME VE KAYDETME MOTORU
+        // =========================================================================
+        async function loadArticles() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('articles')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                state.articles = data || [];
+                await loadBgSettings();
+                render();
+            } catch (err) {
+                console.error("Bulut veri çekme hatası:", err);
+                showToast("Veriler veritabanından çekilemedi: " + err.message, true);
+            }
+        }
+
+        async function loadBgSettings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('articles')
+                    .select('*')
+                    .eq('title', 'SYSTEM_SETTINGS')
+                    .single();
+
+                if (!error && data && data.stats) {
+                    state.bgSettings = data.stats;
+                }
+            } catch(e) {
+                console.warn("Arka plan ayarları yüklenemedi", e);
+            }
+            applyBgStyles();
+        }
+
+        function applyBgStyles() {
+            const body = document.body;
+            const currentRaceData = IRKLAR[state.currentRace];
+            
+            if (state.bgSettings.races && state.bgSettings.races[state.currentRace]) {
+                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${state.bgSettings.races[state.currentRace]}')`;
+                body.style.backgroundSize = "cover";
+                body.style.backgroundAttachment = "fixed";
+                body.style.backgroundPosition = "center";
+            } else {
+                body.style.backgroundColor = currentRaceData.bg;
+                body.style.backgroundImage = currentRaceData.bgGradient;
             }
         }
 
@@ -493,61 +507,10 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        const base64 = canvas.toDataURL('image/jpeg', quality);
-                        resolve(base64);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
                     };
-                    img.onerror = err => reject(err);
                 };
-                reader.onerror = err => reject(err);
             });
-        }
-
-        // =========================================================================
-        // ✍️ SATIR ARASINA RESİM ENJEKSİYON MOTORU
-        // =========================================================================
-        async function uploadInlineImage(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            showToast("Görsel işleniyor ve sıkıştırılıyor...");
-            try {
-                const compressedBase64 = await compressImage(file, 1000, 0.70);
-                let finalUrl = compressedBase64;
-
-                if (supabaseClient) {
-                    showToast("Görsel buluta aktarılıyor...");
-                    const storageUrl = await uploadToSupabaseStorage(file, 'inline');
-                    if (storageUrl) {
-                        finalUrl = storageUrl;
-                    }
-                }
-
-                const textarea = document.getElementById('a-desc');
-                let startPos = textarea.selectionStart;
-                let endPos = textarea.selectionEnd;
-                const text = textarea.value;
-
-                if (startPos === 0 && endPos === 0 && text.length > 0) {
-                    startPos = text.length;
-                    endPos = text.length;
-                }
-
-                const tag = `\n[gorsel: ${finalUrl}]\n`;
-                const newText = text.substring(0, startPos) + tag + text.substring(endPos);
-                
-                textarea.value = newText;
-                textarea.focus();
-                
-                textarea.selectionStart = startPos + tag.length;
-                textarea.selectionEnd = startPos + tag.length;
-
-                showToast("Görsel başarıyla eklendi! ✍️");
-            } catch (err) {
-                console.error("Satır arası görsel ekleme hatası:", err);
-                showToast("Görsel eklenirken hata oluştu.", true);
-            } finally {
-                e.target.value = ''; // Inputu temizle
-            }
         }
 
         // =========================================================================
@@ -555,10 +518,12 @@
         // =========================================================================
         async function uploadToSupabaseStorage(file, folderName = 'covers') {
             try {
+                if(!supabaseClient) throw new Error("Supabase bağlantısı kurulamadı");
+                
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${folderName}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
                 
-                const { data, error } = await supabaseClient.storage
+                const { error } = await supabaseClient.storage
                     .from('archives')
                     .upload(fileName, file);
 
@@ -576,468 +541,172 @@
         }
 
         // =========================================================================
-        // 📊 ARŞİV VERİLERİNİ YÜKLEME VE KAYDETME MOTORU
+        // ✍️ SATIR ARASINA RESİM ENJEKSİYON MOTORU
         // =========================================================================
-        async function loadArticles() {
-            showToast("Arşiv kütüphanesi taranıyor...");
-            
-            if (supabaseClient) {
-                try {
-                    const { data: dbArticles, error } = await supabaseClient
-                        .from('articles')
-                        .select('*')
-                        .order('created_at', { ascending: false });
+        async function uploadInlineImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-                    if (error) throw error;
-                    state.articles = dbArticles || [];
-                } catch (err) {
-                    console.error("Supabase veri çekme hatası:", err);
-                    state.articles = [];
-                }
-            }
-            await loadBgSettings();
-            render();
-        }
+            showToast("Görsel işleniyor...");
+            let finalUrl = await compressImage(file, 1000, 0.70);
+            const cloudUrl = await uploadToSupabaseStorage(file, 'inline');
+            if (cloudUrl) finalUrl = cloudUrl;
 
-        async function loadBgSettings() {
-            if (supabaseClient) {
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('articles')
-                        .select('*')
-                        .eq('title', 'SYSTEM_SETTINGS')
-                        .single();
+            const textarea = document.getElementById('a-desc');
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const text = textarea.value;
 
-                    if (!error && data && data.stats) {
-                        state.bgSettings = data.stats;
-                    }
-                } catch (err) {
-                    console.error("Bulut arka plan yükleme hatası:", err);
-                }
-            }
-            applyBgStyles();
-        }
-
-        function applyBgStyles() {
-            const body = document.body;
-            const currentRaceData = IRKLAR[state.currentRace];
-            
-            if (state.bgSettings.races && state.bgSettings.races[state.currentRace]) {
-                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${state.bgSettings.races[state.currentRace]}')`;
-                body.style.backgroundSize = "cover";
-                body.style.backgroundAttachment = "fixed";
-                body.style.backgroundPosition = "center";
-            } else if (state.currentRace === "Ana Sayfa" && state.bgSettings.home) {
-                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('${state.bgSettings.home}')`;
-                body.style.backgroundSize = "cover";
-                body.style.backgroundAttachment = "fixed";
-                body.style.backgroundPosition = "center";
-            } else {
-                body.style.backgroundColor = currentRaceData.bg;
-                body.style.backgroundImage = currentRaceData.bgGradient;
-            }
+            const tag = `\n[gorsel: ${finalUrl}]\n`;
+            textarea.value = text.substring(0, startPos) + tag + text.substring(endPos);
+            showToast("Satır arası görsel başarıyla eklendi! ✍️");
         }
 
         async function uploadBgImage(event, target) {
             const file = event.target.files[0];
             if (!file) return;
 
-            showToast("Arka plan optimize ediliyor...");
+            showToast("Arka plan yükleniyor...");
+            const cloudUrl = await uploadToSupabaseStorage(file, 'backgrounds');
+            if (!cloudUrl) { showToast("Görsel buluta yüklenemedi.", true); return; }
+
+            if (target === 'home') {
+                state.bgSettings.home = cloudUrl;
+            } else {
+                state.bgSettings.races[state.currentRace] = cloudUrl;
+            }
+
             try {
-                const compressedBase64 = await compressImage(file, 1600, 0.75);
-                let finalUrl = compressedBase64;
-
-                if (supabaseClient) {
-                    showToast("Arka plan buluta aktarılıyor...");
-                    const cloudUrl = await uploadToSupabaseStorage(file, 'backgrounds');
-                    if (cloudUrl) finalUrl = cloudUrl;
-                }
-
-                if (target === 'home') {
-                    state.bgSettings.home = finalUrl;
+                const { data } = await supabaseClient.from('articles').select('id').eq('title', 'SYSTEM_SETTINGS').single();
+                if (data) {
+                    await supabaseClient.from('articles').update({ stats: state.bgSettings }).eq('title', 'SYSTEM_SETTINGS');
                 } else {
-                    state.bgSettings.races[state.currentRace] = finalUrl;
+                    await supabaseClient.from('articles').insert({
+                        title: 'SYSTEM_SETTINGS', desc: 'Ayarlar', race: 'Süper Güçler', tab: 'Yazıtlar', stats: state.bgSettings
+                    });
                 }
-
-                if (supabaseClient) {
-                    const { data: checkExist } = await supabaseClient
-                        .from('articles')
-                        .select('id')
-                        .eq('title', 'SYSTEM_SETTINGS')
-                        .single();
-
-                    if (checkExist) {
-                        await supabaseClient
-                            .from('articles')
-                            .update({ stats: state.bgSettings })
-                            .eq('title', 'SYSTEM_SETTINGS');
-                    } else {
-                        await supabaseClient
-                            .from('articles')
-                            .insert({
-                                title: 'SYSTEM_SETTINGS',
-                                desc: 'Sistem Arka Plan Ayarları',
-                                race: 'Süper Güçler',
-                                tab: 'Yazıtlar',
-                                stats: state.bgSettings
-                            });
-                    }
-                }
-
                 applyBgStyles();
-                showToast("Yeni arka plan başarıyla kaydedildi! ✔");
-            } catch (err) {
-                console.error("Arka plan yükleme hatası:", err);
-                showToast("Görsel işlenirken hata oluştu.", true);
+                showToast("Arka plan kaydedildi! ✔");
+            } catch(e) {
+                console.error(e);
+                showToast("Arka plan kaydedilirken veritabanı hatası oluştu.", true);
             }
         }
 
         // =========================================================================
-        // 💾 YENİ MAKALE VE KARAKTER KAYDETME
+        // 💾 YENİ MAKALE VE KARAKTER KAYDETME (Düzeltilen Kısım)
         // =========================================================================
-        let tempCoverImageBase64 = "";
-
+        let tempCoverBase64 = "";
         async function handleCoverImageUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            showToast("Kapak görseli hazırlanıyor...");
-            try {
-                tempCoverImageBase64 = await compressImage(file, 800, 0.70);
-                showToast("Kapak görseli hazır! ✔");
-            } catch (err) {
-                console.error(err);
-                showToast("Görsel işlenemedi.", true);
-            }
+            tempCoverBase64 = await compressImage(file, 800, 0.70);
+            showToast("Kapak hazır! ✔");
         }
 
         async function saveArticle() {
-            const title = document.getElementById('a-title').value.trim();
-            const desc = document.getElementById('a-desc').value.trim();
-            const race = document.getElementById('a-race').value;
-            const tab = document.getElementById('a-tab').value;
-            let video = document.getElementById('a-video').value.trim();
-            let imageUrl = document.getElementById('a-image-url').value.trim();
-
-            if (!title || !desc) {
-                showToast("Lütfen tüm zorunlu (*) alanları doldurun!", true);
-                return;
-            }
-
             const btn = document.getElementById('save-article-btn');
-            btn.disabled = true;
-            btn.innerHTML = `<span>⏳ Kaydediliyor...</span>`;
-
-            if (video && video.includes('watch?v=')) {
-                const vidId = video.split('v=')[1].split('&')[0];
-                video = `https://www.youtube.com/embed/${vidId}`;
-            }
-
-            let finalImage = imageUrl || tempCoverImageBase64 || "https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=600&q=80";
-
-            if (supabaseClient && document.getElementById('a-image-file').files[0]) {
-                showToast("Kapak görseli buluta aktarılıyor...");
-                const cloudUrl = await uploadToSupabaseStorage(document.getElementById('a-image-file').files[0], 'covers');
-                if (cloudUrl) finalImage = cloudUrl;
-            }
-
-            let stats = null;
-            if (tab === "Karakterler") {
-                stats = {
-                    weapon: document.getElementById('c-weapon').value.trim(),
-                    object: document.getElementById('c-object').value.trim(),
-                    born: document.getElementById('c-born').value.trim(),
-                    attributes: {
-                        str: parseInt(document.getElementById('c-str').value) || 10,
-                        dex: parseInt(document.getElementById('c-dex').value) || 10,
-                        con: parseInt(document.getElementById('c-con').value) || 10,
-                        int: parseInt(document.getElementById('c-int').value) || 10,
-                        wis: parseInt(document.getElementById('c-wis').value) || 10,
-                        cha: parseInt(document.getElementById('c-cha').value) || 10
-                    }
-                };
-            }
-
-            const record = { title, desc, image: finalImage, video, race, tab, stats };
-
-            if (supabaseClient) {
-                try {
-                    const { error } = await supabaseClient.from('articles').insert([record]);
-                    if (error) throw error;
-                    showToast("Yazıt başarıyla buluta nakşedildi! ✔");
-                    resetForm();
-                    closeAdminModal();
-                    loadArticles();
-                } catch (err) {
-                    console.error("Bulut kaydetme hatası:", err);
-                    showToast("Buluta kaydedilemedi. Hata: " + err.message, true);
+            try {
+                if (!supabaseClient) {
+                    showToast("Veritabanı bağlantısı yok. Lütfen Supabase ayarlarını kontrol et!", true);
+                    return;
                 }
-            } else {
-                showToast("Veritabanı bağlantısı bulunamadı!", true);
+
+                const title = document.getElementById('a-title').value.trim();
+                const desc = document.getElementById('a-desc').value.trim();
+                const race = document.getElementById('a-race').value;
+                const tab = document.getElementById('a-tab').value;
+                let video = document.getElementById('a-video').value.trim();
+                let imageUrl = document.getElementById('a-image-url').value.trim();
+
+                if (!title || !desc) { showToast("Zorunlu alanları doldurun!", true); return; }
+
+                // Tuşu kilitle ve yazıyı değiştir
+                btn.disabled = true; 
+                btn.innerHTML = `<span>⏳ Kaydediliyor...</span>`;
+
+                if (video && video.includes('watch?v=')) {
+                    video = `https://www.youtube.com/embed/${video.split('v=')[1].split('&')[0]}`;
+                }
+
+                let finalImage = imageUrl || tempCoverBase64 || "https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=600&q=80";
+                const fileInput = document.getElementById('a-image-file').files[0];
+                if (fileInput) {
+                    const cloudUrl = await uploadToSupabaseStorage(fileInput, 'covers');
+                    if (cloudUrl) finalImage = cloudUrl;
+                }
+
+                let stats = null;
+                if (tab === "Karakterler") {
+                    stats = {
+                        weapon: document.getElementById('c-weapon').value.trim(),
+                        object: document.getElementById('c-object').value.trim(),
+                        born: document.getElementById('c-born').value.trim(),
+                        attributes: {
+                            str: parseInt(document.getElementById('c-str').value) || 10,
+                            dex: parseInt(document.getElementById('c-dex').value) || 10,
+                            con: parseInt(document.getElementById('c-con').value) || 10,
+                            int: parseInt(document.getElementById('c-int').value) || 10,
+                            wis: parseInt(document.getElementById('c-wis').value) || 10,
+                            cha: parseInt(document.getElementById('c-cha').value) || 10
+                        }
+                    };
+                }
+
+                const { error } = await supabaseClient.from('articles').insert([{ title, desc, image: finalImage, video, race, tab, stats }]);
+
+                if (error) {
+                    console.error(error); 
+                    showToast(`Kaydedilemedi: ${error.message}`, true);
+                } else {
+                    showToast("Yazıt buluta nakşedildi! ✔");
+                    resetForm(); closeAdminModal(); loadArticles();
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Kayıt sırasında sistem hatası: " + err.message, true);
+            } finally {
+                // İşlem başarılı olsa da hata da verse buton hep eski haline dönecek.
+                btn.disabled = false; 
+                btn.innerHTML = `<span>💾 Yazıtı Kaydet</span>`;
             }
-            
-            btn.disabled = false;
-            btn.innerHTML = `<span>💾 Yazıtı Kaydet</span>`;
         }
 
         function resetForm() {
-            document.getElementById('a-title').value = "";
-            document.getElementById('a-desc').value = "";
-            document.getElementById('a-image-url').value = "";
-            document.getElementById('a-video').value = "";
-            document.getElementById('a-image-file').value = "";
-            document.getElementById('c-weapon').value = "";
-            document.getElementById('c-object').value = "";
-            document.getElementById('c-born').value = "";
-            tempCoverImageBase64 = "";
+            document.getElementById('a-title').value = ""; document.getElementById('a-desc').value = "";
+            document.getElementById('a-image-url').value = ""; document.getElementById('a-video').value = "";
+            document.getElementById('a-image-file').value = ""; document.getElementById('c-weapon').value = "";
+            document.getElementById('c-object').value = ""; document.getElementById('c-born').value = "";
+            tempCoverBase64 = "";
+        }
+
+        async function seederInitialData() {
+            if(!supabaseClient) { showToast("Bağlantı hatası!", true); return;}
+            showToast("Hazırlanıyor...");
+            const sample = [
+                { title: "Galadriel'in Aynası", desc: "Ayna, geçmişi ve geleceği gösterir.\n\n[gorsel: https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=1200]\n\nLorien Hanımı'nın suyudur.", image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=600", race: "Elfler", tab: "Yazıtlar", stats: null }
+            ];
+            await supabaseClient.from('articles').insert(sample);
+            loadArticles();
         }
 
         // =========================================================================
-        // 🧭 NAVİGASYON VE SEKME YÖNETİMİ
-        // =========================================================================
-        function navigate(dest) {
-            const home = document.getElementById('view-home');
-            const reader = document.getElementById('view-article');
-
-            if (dest === 'home') {
-                reader.classList.add('hidden');
-                home.classList.remove('hidden');
-                home.style.opacity = '1';
-                state.activeArticle = null;
-                applyBgStyles();
-            }
-        }
-
-        function buildRaceTabs() {
-            const container = document.getElementById('race-tabs');
-            container.innerHTML = "";
-
-            Object.keys(IRKLAR).forEach(raceName => {
-                const btn = document.createElement('button');
-                btn.className = `font-cinzel text-xs tracking-widest px-5 py-2.5 rounded-lg border border-stone-800 transition duration-300 relative overflow-hidden bg-black/30`;
-                btn.textContent = raceName;
-                
-                if (state.currentRace === raceName) {
-                    btn.className += ` border-amber-600/80 text-amber-400 font-bold gold-glow`;
-                } else {
-                    btn.className += ` text-stone-500 hover:text-stone-300 hover:border-stone-700`;
-                }
-
-                btn.onclick = () => {
-                    state.currentRace = raceName;
-                    buildRaceTabs();
-                    applyBgStyles();
-                    render();
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function buildTabNavigation() {
-            const container = document.getElementById('tab-navigation');
-            container.innerHTML = "";
-
-            SEKMELER.forEach(tabName => {
-                const btn = document.createElement('button');
-                btn.className = `py-3 border-b-2 tracking-widest transition duration-300`;
-                btn.textContent = tabName;
-
-                if (state.currentTab === tabName) {
-                    btn.className += ` border-amber-500 text-amber-500 font-bold`;
-                } else {
-                    btn.className += ` border-transparent text-stone-600 hover:text-stone-400`;
-                }
-
-                btn.onclick = () => {
-                    state.currentTab = tabName;
-                    buildTabNavigation();
-                    render();
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function toggleCharacterFields() {
-            const tab = document.getElementById('a-tab').value;
-            const fields = document.getElementById('character-fields');
-            if (tab === "Karakterler") {
-                fields.classList.remove('hidden');
-            } else {
-                fields.classList.add('hidden');
-            }
-        }
-
-        // =========================================================================
-        // 🎨 KARTLARIN EKRANA ÇİZİLMESİ (RENDER)
-        // =========================================================================
-        function render() {
-            const grid = document.getElementById('articles-grid');
-            grid.innerHTML = "";
-
-            const filtered = state.articles.filter(a => 
-                a.title !== 'SYSTEM_SETTINGS' &&
-                a.race === state.currentRace && 
-                a.tab === state.currentTab
-            );
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-full text-center py-16 text-stone-600 font-serif italic text-lg border border-dashed border-stone-900 rounded-2xl">
-                        Kütüphanenin bu rafı henüz boş görünüyor...
-                    </div>
-                `;
-                return;
-            }
-
-            filtered.forEach(article => {
-                const col = document.createElement('div');
-                
-                if (state.currentTab === "Karakterler" && article.stats) {
-                    col.className = "flip-card h-96 w-full cursor-pointer";
-                    col.onclick = (e) => {
-                        if (e.target.tagName !== 'BUTTON') {
-                            col.classList.toggle('flipped');
-                        }
-                    };
-                    col.innerHTML = `
-                        <div class="flip-card-inner h-full w-full">
-                            <div class="flip-card-front bg-stone-950/95 border ${IRKLAR[state.currentRace].border} p-6 flex flex-col justify-between items-center gold-glow-hover transition-all duration-300">
-                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 mb-4 shadow-lg shadow-black">
-                                    <img src="${article.image}" class="w-full h-full object-cover">
-                                </div>
-                                <div class="text-center">
-                                    <h4 class="font-cinzel text-lg text-amber-500 tracking-wider mb-2">${article.title}</h4>
-                                    <span class="text-xs text-stone-500 font-sans tracking-widest uppercase">${article.race} Kahramanı</span>
-                                </div>
-                                <div class="text-stone-400 text-xs text-center line-clamp-3 italic px-2">
-                                    "${article.desc.substring(0, 100)}..."
-                                </div>
-                                <span class="text-[10px] text-amber-500/60 font-sans uppercase tracking-widest mt-4">✦ İstatistikler İçin Dokun ✦</span>
-                            </div>
-                            <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-6 flex flex-col justify-between">
-                                <div class="border-b border-amber-950 pb-3">
-                                    <h4 class="font-cinzel text-sm text-amber-500 tracking-wider mb-1">${article.title}</h4>
-                                    <span class="text-[10px] text-stone-400 uppercase tracking-widest font-sans">Karakter Kartı</span>
-                                </div>
-                                <div class="text-xs text-stone-300 space-y-2 text-left my-3 font-sans">
-                                    <div>🗡️ <span class="text-stone-500">Silah:</span> ${article.stats.weapon || 'Bilinmiyor'}</div>
-                                    <div>💍 <span class="text-stone-500">Mistik Eşya:</span> ${article.stats.object || 'Bilinmiyor'}</div>
-                                    <div>📅 <span class="text-stone-500">Doğum:</span> ${article.stats.born || '3. Çağ'}</div>
-                                </div>
-                                <div class="grid grid-cols-6 gap-1 border-t border-amber-950/40 pt-3">
-                                    <div class="text-center"><div class="text-[9px] text-stone-500 font-bold">STR</div><div class="text-xs text-amber-400 font-bold font-sans">${article.stats.attributes?.str || 10}</div></div>
-                                    <div class="text-center"><div class="text-[9px] text-stone-500 font-bold">DEX</div><div class="text-xs text-amber-400 font-bold font-sans">${article.stats.attributes?.dex || 10}</div></div>
-                                    <div class="text-center"><div class="text-[9px] text-stone-500 font-bold">CON</div><div class="text-xs text-amber-400 font-bold font-sans">${article.stats.attributes?.con || 10}</div></div>
-                                    <div class="text-center"><div class="text-[9px] text-stone-500 font-bold">INT</div><div class="text-xs text-amber-400 font-bold font-sans">${article.stats.attributes?.int || 10}</div></div>
-                                    <div class="text-center"><div class="text-[9px] text-stone-500 font-bold">WIS</div><div class="text-xs text-amber-400 font-bold font-sans">${article.stats.attributes?.wis || 10}</div></div>
-                                    <div class="text-center"><div class="text-[9px] text-stone-500 font-bold">CHA</div><div class="text-xs text-amber-400 font-bold font-sans">${article.stats.attributes?.cha || 10}</div></div>
-                                </div>
-                                <button onclick="openImmersiveReader(${article.id})" class="mt-4 bg-amber-950/60 hover:bg-amber-900/50 border border-amber-700/50 text-amber-200 py-1.5 rounded-lg text-xs font-cinzel uppercase tracking-widest transition">
-                                    Hikayeyi Oku
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                } else if (state.currentTab === "Görseller") {
-                    col.className = "bg-stone-950/80 border " + IRKLAR[state.currentRace].border + " rounded-xl overflow-hidden group hover:border-amber-500/50 transition-all duration-300 gold-glow-hover cursor-pointer";
-                    col.onclick = () => openImmersiveReader(article.id);
-                    col.innerHTML = `
-                        <div class="h-64 overflow-hidden relative">
-                            <img src="${article.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
-                                <h4 class="font-cinzel text-base text-amber-500 tracking-wider">${article.title}</h4>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    col.className = "bg-stone-950/80 border " + IRKLAR[state.currentRace].border + " p-6 rounded-xl flex flex-col justify-between group hover:border-amber-500/50 transition-all duration-300 gold-glow-hover cursor-pointer";
-                    col.onclick = () => openImmersiveReader(article.id);
-                    col.innerHTML = `
-                        <div class="space-y-4">
-                            <div class="h-44 w-full rounded-lg overflow-hidden border border-stone-900 shadow-md">
-                                <img src="${article.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            </div>
-                            <h4 class="font-cinzel text-lg text-amber-500 tracking-wide">${article.title}</h4>
-                            <p class="text-stone-400 text-sm leading-relaxed line-clamp-3 italic">
-                                "${article.desc.substring(0, 150)}..."
-                            </p>
-                        </div>
-                        <div class="flex items-center justify-between border-t border-stone-900/40 pt-4 mt-4 font-sans text-[10px] tracking-widest text-stone-500 uppercase">
-                            <span>📜 ${article.tab}</span>
-                            <span class="text-amber-500/70 group-hover:text-amber-400 transition font-serif text-xs">Yazıtı Oku →</span>
-                        </div>
-                    `;
-                }
-
-                grid.appendChild(col);
-            });
-        }
-
-        // =========================================================================
-        // 📖 TAM EKRAN OKUMA MOTORU (READER)
-        // =========================================================================
-        function openImmersiveReader(id) {
-            const article = state.articles.find(a => a.id === id);
-            if (!article) return;
-
-            state.activeArticle = article;
-            const container = document.getElementById('reader-content');
-            
-            let formattedDesc = article.desc;
-            const imageRegex = /\[gorsel:\s*(.*?)\]/g;
-            formattedDesc = formattedDesc.replace(imageRegex, (match, url) => {
-                return `
-                    <div class="my-8 border border-amber-950/30 rounded-xl overflow-hidden shadow-2xl bg-black/40 p-2 max-w-2xl mx-auto">
-                        <img src="${url.trim()}" class="w-full object-cover rounded-lg max-h-[500px]">
-                    </div>
-                `;
-            });
-
-            const paragraphs = formattedDesc.split('\n\n').map(p => {
-                if (p.trim().startsWith('<div')) return p;
-                return `<p class="mb-6 leading-relaxed text-stone-300 text-lg sm:text-xl font-serif text-justify">${p.trim()}</p>`;
-            }).join('');
-
-            let mediaBlock = "";
-            if (article.video) {
-                mediaBlock = `
-                    <div class="mt-12 border-t border-amber-950/20 pt-8">
-                        <h4 class="font-cinzel text-xs text-amber-500 tracking-widest uppercase mb-6 text-center">🎞️ Kadim Tasvir (Video)</h4>
-                        <div class="aspect-video w-full max-w-2xl mx-auto rounded-xl overflow-hidden border border-amber-900/30 shadow-2xl">
-                            <iframe class="w-full h-full" src="${article.video}" title="${article.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = `
-                <div class="text-center mb-10 border-b border-amber-950/30 pb-10">
-                    <h2 class="font-cinzel text-3xl sm:text-5xl text-amber-500 mb-4 tracking-wide">${article.title}</h2>
-                    <span class="text-xs text-stone-500 font-sans tracking-widest uppercase">Kategori: ${article.race} | Tür: ${article.tab}</span>
-                </div>
-
-                <div class="prose max-w-none prose-invert font-serif">
-                    ${paragraphs}
-                </div>
-
-                ${mediaBlock}
-            `;
-
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-article').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // =========================================================================
-        // 🏰 ADMİN MODAL KONTROLLERİ (ÇİFT KALKANLI GÜVENLİK)
+        // 🏰 ADMİN MODAL KONTROLLERİ (ÇİFT AŞAMALI GÜVENLİK Düzeltmeleri)
         // =========================================================================
         function openAdminModal() {
             document.getElementById('admin-modal').classList.remove('hidden');
-            
-            // Eğer daha önceden 1. kapıyı (Geçit kelimesi) geçtiysek
-            const passedGate1 = sessionStorage.getItem('admin_gate_1');
-            if (passedGate1) {
+            const gatewayAuth = sessionStorage.getItem('gateway_passed');
+            const supabaseAuth = sessionStorage.getItem('supabase_logged');
+
+            if (gatewayAuth && supabaseAuth) {
                 document.getElementById('admin-login-card').classList.add('hidden');
-                checkSupabaseSession(); // 2. kapıya geç
+                document.getElementById('supabase-auth-card').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                populateAdminOptions();
+            } else if (gatewayAuth && !supabaseAuth) {
+                document.getElementById('admin-login-card').classList.add('hidden');
+                document.getElementById('supabase-auth-card').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
             } else {
                 document.getElementById('admin-login-card').classList.remove('hidden');
                 document.getElementById('supabase-auth-card').classList.add('hidden');
@@ -1049,123 +718,220 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
-        // KAPI 1: SHA-256 DOĞRULAMASI
+        // 1. Kapı Doğrulaması (Geçit Kelimesi - SHA-256)
         async function verifyAdminPassword() {
-            const pass = document.getElementById('admin-pass').value.trim();
-            const hashedPass = await hashText(pass);
-            
-            if (hashedPass === ADMIN_PASSWORD_HASH) {
-                sessionStorage.setItem('admin_gate_1', 'true');
-                document.getElementById('admin-login-card').classList.add('hidden');
-                document.getElementById('admin-pass').value = '';
-                checkSupabaseSession(); // Kapı 1 açıldı, Kapı 2'ye (Supabase) git
-            } else {
-                showToast("Geçit kelimesi yanlış! 🛑", true);
+            try {
+                const pass = document.getElementById('admin-pass').value.trim();
+                if (!pass) { showToast("Lütfen geçit kelimesini girin!", true); return; }
+
+                const computedHash = await sha256(pass);
+
+                if (computedHash === ADMIN_PASSWORD_HASH) {
+                    sessionStorage.setItem('gateway_passed', 'true');
+                    document.getElementById('admin-login-card').classList.add('hidden');
+                    
+                    if (!supabaseClient) {
+                        showToast("Sistem hatası: Veritabanı bağlantısı yok.", true);
+                        return;
+                    }
+
+                    // Güvenli şekilde oturum kontrolü
+                    const { data, error } = await supabaseClient.auth.getSession();
+                    if (error) throw error;
+
+                    const session = data?.session;
+
+                    if (session) {
+                        sessionStorage.setItem('supabase_logged', 'true');
+                        document.getElementById('admin-panel').classList.remove('hidden');
+                        populateAdminOptions();
+                        showToast("Oturum tanındı, arşiv odası açıldı! 🏰");
+                    } else {
+                        document.getElementById('supabase-auth-card').classList.remove('hidden');
+                        showToast("Geçit kelimesi onaylandı. Şimdi canlı kimlik doğrulaması gerekiyor. 🛡️");
+                    }
+                } else {
+                    showToast("Geçit kelimesi yanlış! 🛑", true);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Sistem hatası: " + err.message, true);
             }
         }
 
-        // KAPI 2: SUPABASE AUTH OTURUM KONTROLÜ
-        async function checkSupabaseSession() {
-            if (!supabaseClient) {
-                showToast("Veritabanı bağlantısı henüz kurulamadı.", true);
-                return;
-            }
+        // 2. Kapı Doğrulaması (Supabase Canlı Auth)
+        async function loginWithSupabaseAuth() {
+            try {
+                const email = document.getElementById('auth-email').value.trim();
+                const password = document.getElementById('auth-password').value.trim();
 
-            const { data, error } = await supabaseClient.auth.getSession();
-            
-            if (data?.session) {
-                // Supabase'de zaten oturum var, direkt paneli aç
-                openDashboardPanel();
-            } else {
-                // Oturum yok, e-posta şifre ekranını göster
-                document.getElementById('supabase-auth-card').classList.remove('hidden');
-                document.getElementById('admin-panel').classList.add('hidden');
-            }
-        }
+                if (!email || !password) {
+                    showToast("Lütfen e-posta ve şifrenizi eksiksiz girin!", true);
+                    return;
+                }
+                
+                if (!supabaseClient) {
+                    showToast("Sistem hatası: Veritabanı bağlantısı yok.", true);
+                    return;
+                }
 
-        // SUPABASE GİRİŞ İŞLEMİ
-        async function loginSupabaseAuth() {
-            const email = document.getElementById('sb-email').value.trim();
-            const password = document.getElementById('sb-pass').value.trim();
-            const btn = document.getElementById('sb-login-btn');
-            
-            if(!email || !password) {
-                showToast("E-Posta ve Şifre zorunludur!", true);
-                return;
-            }
+                showToast("Kimlik bilgileri doğrulanıyor...");
+                
+                // Supabase girişi yapılıyor
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-            btn.disabled = true;
-            btn.innerHTML = "⏳ Bağlanıyor...";
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (error) {
-                showToast("Bağlantı Hatası: " + error.message, true);
-                btn.disabled = false;
-                btn.innerHTML = "Bağlan";
-            } else {
-                showToast("Veritabanına başarıyla bağlanıldı! 🟢");
-                document.getElementById('supabase-auth-card').classList.add('hidden');
-                btn.disabled = false;
-                btn.innerHTML = "Bağlan";
-                openDashboardPanel();
+                if (error) {
+                    console.error(error);
+                    showToast(`Hata: ${error.message}`, true);
+                } else {
+                    sessionStorage.setItem('supabase_logged', 'true');
+                    document.getElementById('supabase-auth-card').classList.add('hidden');
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    populateAdminOptions();
+                    showToast("Veritabanı bağlantısı kilitlendi. Editör aktif! 🏰⚡");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Sistem hatası: " + err.message, true);
             }
         }
 
-        // SUPABASE ÇIKIŞ İŞLEMİ
-        async function logoutSupabaseAuth() {
-            if(supabaseClient) {
-                await supabaseClient.auth.signOut();
-            }
-            sessionStorage.removeItem('admin_gate_1');
-            showToast("Oturum güvenle kapatıldı.");
+        function logoutAdmin() {
+            if(supabaseClient) supabaseClient.auth.signOut();
+            sessionStorage.removeItem('gateway_passed');
+            sessionStorage.removeItem('supabase_logged');
+            showToast("Güvenli çıkış yapıldı. Oturum sıfırlandı.");
             closeAdminModal();
         }
 
-        // NİHAİ ADMİN PANELİNİ AÇMA
-        function openDashboardPanel() {
-            document.getElementById('supabase-auth-card').classList.add('hidden');
-            document.getElementById('admin-panel').classList.remove('hidden');
-            populateAdminOptions();
+        // Navigasyon Arayüzleri
+        function navigate(dest) {
+            if (dest === 'home') {
+                document.getElementById('view-article').classList.add('hidden');
+                document.getElementById('view-home').classList.remove('hidden');
+                applyBgStyles();
+            }
+        }
+
+        function buildRaceTabs() {
+            const container = document.getElementById('race-tabs'); container.innerHTML = "";
+            Object.keys(IRKLAR).forEach(r => {
+                const btn = document.createElement('button');
+                btn.className = `font-cinzel text-xs tracking-widest px-5 py-2.5 rounded-lg border border-stone-800 bg-black/30 transition ${state.currentRace === r ? 'border-amber-600 text-amber-400 gold-glow font-bold' : 'text-stone-500 hover:text-stone-300'}`;
+                btn.textContent = r;
+                btn.onclick = () => { state.currentRace = r; buildRaceTabs(); applyBgStyles(); render(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function buildTabNavigation() {
+            const container = document.getElementById('tab-navigation'); container.innerHTML = "";
+            SEKMELER.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = `py-3 border-b-2 tracking-widest transition ${state.currentTab === t ? 'border-amber-500 text-amber-500 font-bold' : 'border-transparent text-stone-600 hover:text-stone-400'}`;
+                btn.textContent = t;
+                btn.onclick = () => { state.currentTab = t; buildTabNavigation(); render(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleCharacterFields() {
+            document.getElementById('character-fields').classList.toggle('hidden', document.getElementById('a-tab').value !== "Karakterler");
         }
 
         function populateAdminOptions() {
-            const raceSelect = document.getElementById('a-race');
-            raceSelect.innerHTML = "";
-            Object.keys(IRKLAR).forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r;
-                opt.textContent = r;
-                raceSelect.appendChild(opt);
-            });
+            const rSel = document.getElementById('a-race'); rSel.innerHTML = "";
+            Object.keys(IRKLAR).forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rSel.appendChild(o); });
+            const tSel = document.getElementById('a-tab'); tSel.innerHTML = "";
+            SEKMELER.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o); });
+        }
 
-            const tabSelect = document.getElementById('a-tab');
-            tabSelect.innerHTML = "";
-            SEKMELER.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                tabSelect.appendChild(opt);
+        // =========================================================================
+        // 🎨 KARTLARIN EKRANA ÇİZİLMESİ (RENDER)
+        // =========================================================================
+        function render() {
+            const grid = document.getElementById('articles-grid'); grid.innerHTML = "";
+            const filtered = state.articles.filter(a => a.title !== 'SYSTEM_SETTINGS' && a.race === state.currentRace && a.tab === state.currentTab);
+
+            if (!filtered.length) {
+                grid.innerHTML = `<div class="col-span-full text-center py-16 text-stone-600 italic border border-dashed border-stone-900 rounded-2xl">Kütüphanenin bu rafı henüz boş...</div>`;
+                return;
+            }
+
+            filtered.forEach(art => {
+                const col = document.createElement('div');
+                if (state.currentTab === "Karakterler" && art.stats) {
+                    col.className = "flip-card h-96 w-full cursor-pointer";
+                    col.onclick = (e) => { if (e.target.tagName !== 'BUTTON') col.classList.toggle('flipped'); };
+                    col.innerHTML = `
+                        <div class="flip-card-inner h-full w-full">
+                            <div class="flip-card-front bg-stone-950 border ${IRKLAR[state.currentRace].border} p-6 flex flex-col justify-between items-center gold-glow-hover transition-all">
+                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 shadow-black shadow-lg"><img src="${art.image}" class="w-full h-full object-cover"></div>
+                                <h4 class="font-cinzel text-lg text-amber-500">${art.title}</h4>
+                                <p class="text-stone-400 text-xs line-clamp-3 italic">"${art.desc.substring(0, 80)}..."</p>
+                                <span class="text-[10px] text-amber-500/60 uppercase tracking-wider font-sans">✦ İstatistikler / Hikaye İçin Dokun ✦</span>
+                            </div>
+                            <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-6 flex flex-col justify-between">
+                                <div class="border-b border-amber-950 pb-2"><h4 class="font-cinzel text-amber-500">${art.title}</h4></div>
+                                <div class="text-xs text-stone-300 text-left space-y-1 font-sans">
+                                    <div>🗡️ Silah: ${art.stats.weapon || 'Bilinmiyor'}</div>
+                                    <div>💍 Eşya: ${art.stats.object || 'Bilinmiyor'}</div>
+                                    <div>📅 Doğum: ${art.stats.born || '3. Çağ'}</div>
+                                </div>
+                                <div class="grid grid-cols-6 gap-1 border-t border-amber-950/40 pt-2 text-[10px] font-sans font-bold text-amber-400">
+                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">STR</span>${art.stats.attributes?.str || 10}</div>
+                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">DEX</span>${art.stats.attributes?.dex || 10}</div>
+                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">CON</span>${art.stats.attributes?.con || 10}</div>
+                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">INT</span>${art.stats.attributes?.int || 10}</div>
+                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">WIS</span>${art.stats.attributes?.wis || 10}</div>
+                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">CHA</span>${art.stats.attributes?.cha || 10}</div>
+                                </div>
+                                <button onclick="openImmersiveReader(${art.id})" class="mt-4 bg-amber-950 border border-amber-700/50 text-amber-200 py-1.5 rounded-lg text-xs font-cinzel tracking-widest uppercase hover:bg-amber-900 transition">Hikayeyi Oku</button>
+                            </div>
+                        </div>`;
+                } else if (state.currentTab === "Görseller") {
+                    col.className = "bg-stone-950 border " + IRKLAR[state.currentRace].border + " rounded-xl overflow-hidden group hover:border-amber-500/50 cursor-pointer gold-glow-hover transition-all";
+                    col.onclick = () => openImmersiveReader(art.id);
+                    col.innerHTML = `<div class="h-64 overflow-hidden relative"><img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex items-end p-4"><h4 class="font-cinzel text-amber-500">${art.title}</h4></div></div>`;
+                } else {
+                    col.className = "bg-stone-950 border " + IRKLAR[state.currentRace].border + " p-6 rounded-xl flex flex-col justify-between group hover:border-amber-500/50 cursor-pointer gold-glow-hover transition-all";
+                    col.onclick = () => openImmersiveReader(art.id);
+                    col.innerHTML = `<div class="space-y-4"><div class="h-44 rounded-lg overflow-hidden border border-stone-900"><img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div><h4 class="font-cinzel text-lg text-amber-500">${art.title}</h4><p class="text-stone-400 text-sm line-clamp-3 italic">"${art.desc.substring(0, 120)}..."</p></div><div class="flex justify-between border-t border-stone-900/40 pt-3 mt-4 text-[10px] text-stone-500 uppercase tracking-wider"><span>📜 ${art.tab}</span><span class="text-amber-500">Oku →</span></div>`;
+                }
+                grid.appendChild(col);
             });
         }
 
-        // SEED BOŞ VERİTABANI (EĞER İHTİYAÇ OLURSA)
-        async function seederInitialData() {
-            if (supabaseClient) {
-                showToast("Canlı veritabanı şablonlarla dolduruluyor...");
-                try {
-                    const { error } = await supabaseClient.from('articles').insert(defaultArticles);
-                    if (error) throw error;
-                    showToast("Veritabanı başarıyla canlandırıldı! ⚡");
-                } catch (err) {
-                    console.error("Seed hatası:", err);
-                    showToast("İşlem başarısız (RLS kuralları nedeniyle engellenmiş olabilir).", true);
-                }
-            }
-            loadArticles();
+        // =========================================================================
+        // 📖 TAM EKRAN OKUMA MOTORU (READER)
+        // =========================================================================
+        function openImmersiveReader(id) {
+            const art = state.articles.find(a => a.id === id); if (!art) return;
+            state.activeArticle = art;
+            let desc = art.desc.replace(/\[gorsel:\s*(.*?)\]/g, (m, url) => `<div class="my-6 border border-amber-950/30 rounded-xl overflow-hidden bg-black/40 p-2 max-w-xl mx-auto"><img src="${url.trim()}" class="w-full object-cover rounded-lg max-h-[450px]"></div>`);
+            const paras = desc.split('\n\n').map(p => p.trim().startsWith('<div') ? p : `<p class="mb-5 leading-relaxed text-stone-300 text-lg text-justify">${p.trim()}</p>`).join('');
+            
+            document.getElementById('reader-content').innerHTML = `
+                <div class="text-center mb-8 border-b border-amber-950/30 pb-6"><h2 class="font-cinzel text-3xl sm:text-4xl text-amber-500 mb-2">${art.title}</h2><span class="text-[10px] text-stone-500 font-sans uppercase tracking-widest">${art.race} | ${art.tab}</span></div>
+                <div class="prose prose-invert max-w-none">${paras}</div>
+                ${art.video ? `<div class="mt-8 pt-6 border-t border-amber-950/20"><div class="aspect-video max-w-xl mx-auto rounded-xl overflow-hidden border border-amber-900/30 shadow-2xl"><iframe class="w-full h-full" src="${art.video}" frameborder="0" allowfullscreen></iframe></div></div>` : ''}
+            `;
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-article').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // =========================================================================
+        // 📣 TOAST BİLDİRİM SİSTEMİ
+        // =========================================================================
+        let toastT;
+        function showToast(text, isErr = false) {
+            const box = document.getElementById('toast-box'); const content = document.getElementById('toast-content');
+            document.getElementById('toast-text').textContent = text;
+            document.getElementById('toast-icon').textContent = isErr ? "🛑" : "📜";
+            content.className = isErr ? "bg-stone-950/95 border border-red-500/50 text-red-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md" : "bg-stone-950/95 border border-amber-500/40 text-amber-200 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md";
+            box.classList.remove('opacity-0', 'translate-y-10'); box.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toastT); toastT = setTimeout(() => { box.classList.add('opacity-0', 'translate-y-10'); box.classList.remove('opacity-100', 'translate-y-0'); }, 3000);
         }
     </script>
 </body>
