@@ -220,18 +220,16 @@
                         <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-2">Başlık / Karakter Adı <span class="text-red-500">*</span></label>
                         <input id="a-title" class="w-full bg-black p-3 rounded border border-zinc-800 focus:border-amber-500 focus:outline-none text-white font-serif text-base sm:text-lg">
                     </div>
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest">Destansı Hikaye / Lore <span class="text-red-500">*</span></label>
-                            <button type="button" onclick="document.getElementById('inline-img-uploader').click()" class="text-[9px] font-sans tracking-widest uppercase border border-amber-500/30 text-amber-500 px-2.5 py-1 rounded hover:bg-amber-500/10 transition flex items-center gap-1 cursor-pointer">
-                                ➕ Satır Arasına Görsel Ekle
-                            </button>
-                            <input type="file" id="inline-img-uploader" accept="image/*" class="hidden" onchange="uploadInlineImage(event)">
-                        </div>
-                        <textarea id="a-desc" class="w-full bg-black p-3 sm:p-4 rounded border border-zinc-800 focus:border-amber-500 focus:outline-none h-48 sm:h-72 text-zinc-300 font-serif text-sm sm:text-base leading-relaxed resize-y"></textarea>
-                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">İpucu: Resim eklemek istediğiniz yere imleci koyup butona basın.</p>
-                    </div>
-                </div>
+                  <div>
+    <div class="flex justify-between items-center mb-2">
+        <label class="block text-amber-400 font-serif font-semibold text-sm">Yazıt / Hikaye Metni</label>
+        <label for="inline-img-input" class="cursor-pointer bg-amber-950/60 hover:bg-amber-800/50 border border-amber-600/50 text-amber-200 px-3 py-1 rounded-lg text-xs transition duration-300 flex items-center gap-1.5 font-serif shadow-sm">
+            <span>➕ Satır Arasına Görsel Ekle</span>
+        </label>
+        <input type="file" id="inline-img-input" accept="image/*" class="hidden" onchange="uploadInlineImage(event)">
+    </div>
+    <textarea id="a-desc" rows="12" class="w-full bg-stone-900/90 border border-amber-900/50 rounded-lg p-4 text-stone-200 placeholder-stone-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 font-serif leading-relaxed" placeholder="Yazıtın hikayesini buraya nakşet..." required></textarea>
+</div>
 
                 <!-- Sağ: Seçimler, Medya ve TCG -->
                 <div class="space-y-4 sm:space-y-5">
