@@ -166,7 +166,6 @@
             <h3 class="text-2xl font-epic text-white tracking-wider mb-2 text-center">Arşiv Sorumlusu</h3>
             <p class="text-xs text-zinc-500 font-sans text-center mb-8 uppercase tracking-widest">Giriş izni gereklidir</p>
             
-            <!-- Email Field -->
             <div id="email-field-container" class="mb-4">
                 <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-2 font-sans">Yönetici E-Posta</label>
                 <input type="email" id="adminEmail" placeholder="ornek@domain.com" class="w-full bg-black p-4 rounded border border-zinc-800 focus:border-amber-500 text-white text-center outline-none">
@@ -214,7 +213,7 @@
             </div>
             
             <!-- SEKME 1: İÇERİK EKLEME/DÜZENLEME FORMU -->
-            <div id="admin-tab-content" class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            <div id="admin-tab-content" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 <!-- Sol: Metin -->
                 <div class="space-y-4 sm:space-y-5">
                     <div>
@@ -222,8 +221,15 @@
                         <input id="a-title" class="w-full bg-black p-3 rounded border border-zinc-800 focus:border-amber-500 focus:outline-none text-white font-serif text-base sm:text-lg">
                     </div>
                     <div>
-                        <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-2">Destansı Hikaye / Lore <span class="text-red-500">*</span></label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest">Destansı Hikaye / Lore <span class="text-red-500">*</span></label>
+                            <button type="button" onclick="document.getElementById('inline-img-uploader').click()" class="text-[9px] font-sans tracking-widest uppercase border border-amber-500/30 text-amber-500 px-2.5 py-1 rounded hover:bg-amber-500/10 transition flex items-center gap-1 cursor-pointer">
+                                ➕ Satır Arasına Görsel Ekle
+                            </button>
+                            <input type="file" id="inline-img-uploader" accept="image/*" class="hidden" onchange="uploadInlineImage(event)">
+                        </div>
                         <textarea id="a-desc" class="w-full bg-black p-3 sm:p-4 rounded border border-zinc-800 focus:border-amber-500 focus:outline-none h-48 sm:h-72 text-zinc-300 font-serif text-sm sm:text-base leading-relaxed resize-y"></textarea>
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">İpucu: Resim eklemek istediğiniz yere imleci koyup butona basın.</p>
                     </div>
                 </div>
 
@@ -340,10 +346,10 @@
 
     <script>
         // =========================================================================
-        // 🛡️ KADİM SUNUCU KİLİTLEME AYARLARI (SENİN GERÇEK BİLGİLERİN YERLEŞTİRİLDİ!)
+        // 🛡️ KADİM SUNUCU KİLİTLEME AYARLARI
         // =========================================================================
-        const SUPABASE_URL = "https://frwmpokqgnsdpsumfobp.supabase.co"; // Kendi Supabase URL'ini buraya yaz
-        const SUPABASE_KEY = "sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"; // Kendi Anon Key'ini buraya yaz
+        const SUPABASE_URL = "https://frwmpokqgnsdpsumfobp.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"; 
         // =========================================================================
 
         let appSettings = JSON.parse(localStorage.getItem('app_settings')) || {
@@ -449,6 +455,29 @@
             return text;
         }
 
+        // =========================================================================
+        // 📚 STORYBOOK PARSER (HİKAYE KİTABI ŞABLONU)
+        // =========================================================================
+        function formatLoreText(text) {
+            if (!text) return '';
+            const lines = text.split('\n').filter(p => p.trim() !== '');
+            return lines.map(line => {
+                const trimmed = line.trim();
+                // Eğer bu satır bir inline görsel koduysa
+                if (trimmed.startsWith('[gorsel:') && trimmed.endsWith(']')) {
+                    const url = trimmed.substring(8, trimmed.length - 1).trim();
+                    return `
+                        <div class="my-8 flex flex-col items-center justify-center copy-protected">
+                            <div class="max-w-xl w-full rounded-xl overflow-hidden border border-amber-500/20 shadow-[0_0_25px_rgba(212,175,55,0.1)] bg-zinc-950 p-1.5 transform hover:scale-[1.01] transition-all duration-300">
+                                <img src="${url}" class="w-full h-auto rounded-lg object-cover select-none pointer-events-none" onerror="this.src='https://placehold.co/800x450/18181b/ffffff?text=Gorsel+Yuklenemedi'">
+                            </div>
+                        </div>
+                    `;
+                }
+                return `<p>${line}</p>`;
+            }).join('');
+        }
+
         let articles = [];
         let currentPage = 'home'; 
         let currentRaceId = null;
@@ -485,7 +514,6 @@
                 try {
                     supabaseClient = supabase.createClient(url, key);
                     
-                    // Listen to active session changes
                     supabaseClient.auth.onAuthStateChange((event, session) => {
                         currentUserSession = session;
                         if (badge) {
@@ -519,14 +547,14 @@
                     
                     const seedBtn = document.getElementById('db-seed-btn');
                     if (!error && data) {
-                        // SYSTEM_SETTINGS satırını ayır ve ayarları senkronize et
+                        // Sistem ayarlarını veritabanından oku
                         const settingsRow = data.find(a => a.title === 'SYSTEM_SETTINGS' && a.tab === 'SYSTEM');
                         if (settingsRow && settingsRow.stats) {
                             appSettings = settingsRow.stats;
                             localStorage.setItem('app_settings', JSON.stringify(appSettings));
                         }
 
-                        // Sadece gerçek makaleleri listele (Sistem ayar satırını gizle)
+                        // Normal yazıtları filtrele
                         const actualArticles = data.filter(a => !(a.title === 'SYSTEM_SETTINGS' && a.tab === 'SYSTEM'));
 
                         if (actualArticles.length === 0) {
@@ -653,7 +681,6 @@
                     </div>
                 </div>
 
-                <!-- ÖNSÖZ (PROLOGUE) ALANI -->
                 <div class="max-w-4xl mx-auto px-6 mt-16 text-center copy-protected">
                     <div class="border-t border-b border-amber-500/20 py-8 relative">
                         <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-950 px-4">
@@ -746,7 +773,6 @@
                     </div>
                 </div>
 
-                <!-- İÇERİK PARŞÖMENLERİ AKIŞI -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-8 py-16 min-h-[50vh]">
                     ${filteredArticles.length === 0 ? `
                         <div class="text-center py-24 border border-dashed border-zinc-800 rounded-xl bg-zinc-950/30 backdrop-blur-sm max-w-4xl mx-auto">
@@ -916,7 +942,7 @@
                                                 <span class="text-zinc-200 font-bold">${createCrossLink(stats.object)}</span>
                                             </div>
                                             <div class="flex justify-between items-center">
-                                                <span class="text-zinc-500 uppercase tracking-widest text-[9px]">Yaşadığı Dönem</span>
+                                                <span class="text-zinc-500 uppercase tracking-widest text-[9px]">Yaşadıgı Dönem</span>
                                                 <span class="text-zinc-200 font-bold">${stats.born}</span>
                                             </div>
                                         </div>
@@ -965,11 +991,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        function formatLoreText(text) {
-            if (!text) return '';
-            return text.split('\n').filter(p => p.trim() !== '').map(p => `<p>${p}</p>`).join('');
         }
 
         function getYouTubeID(url) {
@@ -1044,6 +1065,9 @@
             }
         }
 
+        // =========================================================================
+        // 📷 GÖRSEL BOYUTLANDIRMA VE SIKIŞTIRMA PROGELİ (Image Optimizer)
+        // =========================================================================
         function compressImage(file, maxWidth = 1200, quality = 0.60) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1052,7 +1076,6 @@
                     const img = new Image();
                     img.src = event.target.result;
                     img.onload = () => {
-                        // Eğer dosya zaten çok küçükse (<150KB) sıkıştırmaya gerek yok
                         if (file.size < 150 * 1024) {
                             resolve(event.target.result);
                             return;
@@ -1086,17 +1109,14 @@
     <script>
         async function openAdminModal() {
             if (supabaseClient) {
-                // Check if active user session is stored in client memory
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session) {
-                    // Session exists! Bypass password modal entirely and open panel
                     currentUserSession = session;
                     openAdminPanel();
                     return;
                 }
             }
             
-            // Otherwise, show standard login screen
             document.getElementById('loginModal').classList.remove('hidden');
             document.getElementById('adminPassword').value = '';
             const emailInput = document.getElementById('adminEmail');
@@ -1192,6 +1212,7 @@
                 tabSel.appendChild(opt);
             });
 
+            // Görünüm sekmelerini doldur
             document.getElementById('set-home-bg').value = appSettings.homeBg;
             const raceBgContainer = document.getElementById('race-bg-inputs');
             raceBgContainer.innerHTML = '';
@@ -1267,27 +1288,58 @@
             }
         }
 
-        async function previewBgImage(e, targetRaceId) {
+   
+        // =========================================================================
+        // ✍️ SATIR ARASINA RESİM ENJEKSİYON MOTORU
+        // =========================================================================
+        async function uploadInlineImage(e) {
             const file = e.target.files[0];
-            if (file) {
-                try {
-                    showToast("Arka plan optimize ediliyor...");
-                    // Arka plan resimlerini agresif şekilde küçült (max 1200px, %60 kalite)
-                    const compressedBase64 = await compressImage(file, 1200, 0.60);
-                    if (targetRaceId === 'home') {
-                        tempHomeBgFile = file;
-                        document.getElementById('set-home-bg').value = compressedBase64;
-                    } else {
-                        tempRaceBgFiles[targetRaceId] = file;
-                        document.getElementById(`set-bg-${targetRaceId}`).value = compressedBase64;
+            if (!file) return;
+
+            showToast("Görsel işleniyor ve sıkıştırılıyor...");
+            try {
+                const compressedBase64 = await compressImage(file, 1000, 0.70);
+                let finalUrl = compressedBase64;
+
+                if (supabaseClient) {
+                    showToast("Görsel buluta aktarılıyor...");
+                    const storageUrl = await uploadToSupabaseStorage(file, 'inline');
+                    if (storageUrl) {
+                        finalUrl = storageUrl;
                     }
-                    showToast("Görsel optimize edildi ve önizleme hazır! ✔");
-                } catch (err) {
-                    console.error("Arka plan sıkıştırma hatası:", err);
-                    showToast("Görsel sıkıştırılırken hata oluştu.", true);
                 }
+
+                const textarea = document.getElementById('a-desc');
+                let startPos = textarea.selectionStart;
+                let endPos = textarea.selectionEnd;
+                const text = textarea.value;
+
+                // EĞER KULLANICI KUTUNUN İÇİNDE BİR YERE TIKLAMDIYSA, GÖRSELİ DOĞRUDAN YAZININ EN SONUNA EKLE
+                if (startPos === 0 && endPos === 0 && text.length > 0) {
+                    startPos = text.length;
+                    endPos = text.length;
+                }
+
+                const tag = `\n[gorsel: ${finalUrl}]\n`;
+                const newText = text.substring(0, startPos) + tag + text.substring(endPos);
+                
+                textarea.value = newText;
+                textarea.focus();
+                
+                // İmleci eklenen resmin sonuna kaydır
+                textarea.selectionStart = startPos + tag.length;
+                textarea.selectionEnd = startPos + tag.length;
+
+                showToast("Görsel başarıyla eklendi! ✍️");
+            } catch (err) {
+                console.error("Satır arası görsel ekleme hatası:", err);
+                showToast("Görsel eklenirken hata oluştu.", true);
+            } finally {
+                e.target.value = ''; // Inputu temizle
             }
         }
+
+        async function previewBgImage(e, targetRaceId) {
 
         function clearImage() {
             document.getElementById('a-image-file').value = '';
@@ -1501,6 +1553,9 @@
             currentTabId = tabVal;
         }
 
+        // =========================================================================
+        // 🎨 SENKRONİZE GÖRÜNÜM AYARI VE BULUT KAYDEDİCİSİ
+        // =========================================================================
         async function saveAppearanceSettings() {
             const btn = document.querySelector('button[onclick="saveAppearanceSettings()"]');
             const originalText = btn ? btn.innerHTML : "Değişiklikleri Uygula";
@@ -1513,13 +1568,14 @@
                 let finalHomeBg = document.getElementById('set-home-bg').value.trim();
                 showToast("Görünüm ayarları işleniyor, lütfen bekleyin...");
 
-                // Supabase Storage varsa resimleri oraya yükle
+                // Ana sayfa arka planını depoya yükle
                 if (tempHomeBgFile && supabaseClient) {
                     const url = await uploadToSupabaseStorage(tempHomeBgFile, 'backgrounds');
                     if (url) finalHomeBg = url;
                 }
                 appSettings.homeBg = finalHomeBg;
 
+                // Irk arka planlarını depoya yükle
                 for (const r of races) {
                     let finalRaceBg = document.getElementById(`set-bg-${r.id}`).value.trim();
                     const uploadFile = tempRaceBgFiles[r.id];
@@ -1530,7 +1586,7 @@
                     if (finalRaceBg) appSettings.raceBgs[r.id] = finalRaceBg;
                 }
 
-                // Supabase bağlıysa ayarları veritabanında sakla (Cihazlar arası senkronizasyon için)
+                // Ayarları veritabanında "SYSTEM_SETTINGS" kaydına işle (Cihazlar Arası Bulut Eşitlemesi)
                 if (supabaseClient) {
                     const { data: existing, error: checkError } = await supabaseClient
                         .from('articles')
@@ -1561,7 +1617,7 @@
                     }
                 }
 
-                // LocalStorage'a yedekle (Tarayıcı hafıza limitlerini yakala)
+                // Locale de yedekle
                 try {
                     localStorage.setItem('app_settings', JSON.stringify(appSettings));
                 } catch (localErr) {
@@ -1604,6 +1660,7 @@
             }
         });
 
+        // Dokunmatik dışı alanlara dokunulduğunda dönen kartları eski haline getir
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.flip-card')) {
                 document.querySelectorAll('.flip-card').forEach(card => {
@@ -1612,10 +1669,13 @@
             }
         });
 
+        // =========================================================================
+        // 🛡️ ARŞİV KOPYALAMA KILIDI VE SAĞ TIK KORUYUCUSU
+        // =========================================================================
         document.addEventListener('copy', (e) => {
             const activeEl = document.activeElement;
             if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-                return; 
+                return; // Admin yazarken kopyalayabilsin
             }
             e.preventDefault();
             showToast("Bu kadim yazıtlar kopyalamaya karşı Arşiv Mührü ile korunmaktadır!", true);
