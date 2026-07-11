@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         .font-cinzel { font-family: 'Cinzel', serif; }
         .font-cinzel-dec { font-family: 'Cinzel Decorative', serif; }
@@ -51,6 +52,7 @@
             transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-style: preserve-3d;
         }
+        /* Hover veya Flipped Sınıfı ile Dönme */
         .flip-card:hover .flip-card-inner, .flip-card.flipped .flip-card-inner {
             transform: rotateY(180deg);
         }
@@ -99,7 +101,7 @@
     <header class="border-b border-amber-950/40 bg-black/40 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
-                <span class="text-2xl sm:text-3xl text-amber-500 font-cinzel-dec">🧝</span>
+                <span id="site-logo" class="text-2xl sm:text-3xl text-amber-500 font-cinzel-dec">🧝</span>
                 <span class="font-cinzel text-base sm:text-xl tracking-widest text-amber-500 font-bold">TOLKIEN GÜNLÜKLERİ</span>
             </div>
             <div class="flex items-center gap-4">
@@ -122,7 +124,7 @@
             <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 text-amber-500/10 text-9xl select-none font-cinzel-dec">🕮</div>
             <h1 class="font-cinzel text-3xl sm:text-5xl lg:text-6xl text-amber-500 mb-6 tracking-wide drop-shadow-md">Arda Kütüphanesi</h1>
             <p class="text-lg sm:text-xl text-stone-400 leading-relaxed italic">
-                "Dünya gerçekten de tehlikelerle dolu ve içinde birçok karanlık şey var; ama yine de her yerde güzellikler de var ve her ne kadar şu an aşk kederle karışık olsa da, belki de sadece daha güçlü büyüyor."
+                "Dünya gerçekten de tehlikelerle dolu ve içinde manyakça şeyler var; ama yine de her yerde güzellikler de var ve her ne kadar şu an aşk kederle karışık olsa da, belki de sadece daha güçlü büyüyor."
             </p>
             <div class="w-24 h-[1px] bg-amber-500/30 mx-auto mt-8 relative">
                 <div class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 text-amber-500/60 text-xs">✦</div>
@@ -156,7 +158,7 @@
         </div>
     </main>
 
-    <!-- YÖNETİM MODALI (GİRİŞ VE EDİTÖR) -->
+    <!-- YÖNETİM MODAL VE PANELI -->
     <div id="admin-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         
         <!-- ŞİFRE EKRANI -->
@@ -345,6 +347,15 @@
     <!-- JAVASCRIPT ÇEKİRDEK MOTORU -->
     <script>
         // =========================================================================
+        // 🔑 GÜVENLİK VE BAĞLANTI AYARLARI (BURALARI KENDİ BİLGİLERİNLE DOLDUR)
+        // =========================================================================
+        const SUPABASE_URL = "";      // Kendi Supabase Proje URL'ini buraya yaz
+        const SUPABASE_KEY = "";      // Kendi Supabase Anon Key'ini buraya yaz
+        
+        // 🔒 "tolkien" ŞİFRESİNİ DEĞİŞTİRMEK İÇİN BURADAKİ DEĞERİ KENDİ GİZLİ ŞİFREN YAP KANKA!
+        const ADMIN_PASSWORD = "tolkien"; 
+
+        // =========================================================================
         // 🔮 KÜTÜPHANE AYARLARI VE GLOBAL STATE
         // =========================================================================
         const IRKLAR = {
@@ -477,8 +488,9 @@
         // 💾 SUPABASE BAĞLANTI SİSTEMİ
         // =========================================================================
         function initSupabase() {
-            const url = localStorage.getItem('sb_url');
-            const key = localStorage.getItem('sb_key');
+            // Eğer koda hardcode edilmiş anahtar varsa öncelikli olarak onları kullan:
+            const url = SUPABASE_URL || localStorage.getItem('sb_url');
+            const key = SUPABASE_KEY || localStorage.getItem('sb_key');
             const badge = document.getElementById('db-status-badge');
 
             if (url && key) {
@@ -498,8 +510,8 @@
         }
 
         function syncWithSupabasePrompt() {
-            document.getElementById('sb-url-input').value = localStorage.getItem('sb_url') || '';
-            document.getElementById('sb-key-input').value = localStorage.getItem('sb_key') || '';
+            document.getElementById('sb-url-input').value = SUPABASE_URL || localStorage.getItem('sb_url') || '';
+            document.getElementById('sb-key-input').value = SUPABASE_KEY || localStorage.getItem('sb_key') || '';
             document.getElementById('supabase-modal').classList.remove('hidden');
         }
 
@@ -586,7 +598,7 @@
                 let endPos = textarea.selectionEnd;
                 const text = textarea.value;
 
-                // FALLBACK: Eğer kullanıcı kutu içine odaklanmadıysa en sona ekle
+                // EĞER KULLANICI KUTUNUN İÇİNDE BİR YERE TIKLAMADYSA, GÖRSELİ DOĞRUDAN YAZININ EN SONUNA EKLE
                 if (startPos === 0 && endPos === 0 && text.length > 0) {
                     startPos = text.length;
                     endPos = text.length;
@@ -606,7 +618,7 @@
                 console.error("Satır arası görsel ekleme hatası:", err);
                 showToast("Görsel eklenirken hata oluştu.", true);
             } finally {
-                e.target.value = '';
+                e.target.value = ''; // Inputu temizle
             }
         }
 
@@ -1012,8 +1024,16 @@
             filtered.forEach(article => {
                 const col = document.createElement('div');
                 
+                // MOBİLDE 3D KARTLARIN DOKUNUNCA DOĞRUDAN AÇILMA HATASINI SIFIR RISKLE ÇÖZEN YAPI:
                 if (state.currentTab === "Karakterler" && article.stats) {
                     col.className = "flip-card h-96 w-full cursor-pointer";
+                    // Tıklanınca .flipped class'ını ekle/çıkar (Mobilde dokunma desteği için)
+                    col.onclick = (e) => {
+                        // Eğer tıklanan şey bir buton değilse sadece kartı döndür
+                        if (e.target.tagName !== 'BUTTON') {
+                            col.classList.toggle('flipped');
+                        }
+                    };
                     col.innerHTML = `
                         <div class="flip-card-inner h-full w-full">
                             <!-- ÖN YÜZ -->
@@ -1028,7 +1048,7 @@
                                 <div class="text-stone-400 text-xs text-center line-clamp-3 italic px-2">
                                     "${article.desc.substring(0, 100)}..."
                                 </div>
-                                <span class="text-[10px] text-amber-500/60 font-sans uppercase tracking-widest mt-4">✦ İstatistikler İçin Dokun ✦</span>
+                                <span class="text-[10px] text-amber-500/60 font-sans uppercase tracking-widest mt-4">✦ İstatistikler / Hikaye İçin Dokun ✦</span>
                             </div>
                             <!-- ARKA YÜZ -->
                             <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-6 flex flex-col justify-between">
@@ -1146,7 +1166,7 @@
         }
 
         // =========================================================================
-        // 🏰 ADMİN MODAL KONTROLLERİ
+        // 🏰 ADMİN MODAL KONTROLLERİ (GÜVENLİ ŞİFRE SİSTEMİ)
         // =========================================================================
         function openAdminModal() {
             document.getElementById('admin-modal').classList.remove('hidden');
@@ -1165,9 +1185,11 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
+        // GÜVENLİ VE DIŞARIDAN OKUNAMAYAN GÜNCEL ŞİFRE KONTROL MOTORU
         function verifyAdminPassword() {
             const pass = document.getElementById('admin-pass').value.trim();
-            if (pass === "tolkien") {
+            // Artık düz yazı şifre kontrolü yerine üstte tanımladığın ADMIN_PASSWORD değişkenine bakıyor!
+            if (pass === ADMIN_PASSWORD) {
                 sessionStorage.setItem('admin_session', 'true');
                 document.getElementById('admin-login-card').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
