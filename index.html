@@ -108,7 +108,7 @@
                 <!-- Veritabanı Bağlantı Göstergesi -->
                 <div id="db-status-badge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-700/30 text-amber-300 font-sans text-[10px] uppercase tracking-wider">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span>Lokal Hafıza</span>
+                    <span>Bağlanıyor...</span>
                 </div>
                 <button onclick="openAdminModal()" class="font-cinzel text-xs uppercase tracking-widest text-stone-400 hover:text-amber-400 border border-stone-800 hover:border-amber-700/50 px-4 py-2 rounded transition duration-300 bg-stone-950/50 shadow-inner">
                     🏰 Yönetim
@@ -161,7 +161,7 @@
     <!-- YÖNETİM MODAL VE PANELI -->
     <div id="admin-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         
-        <!-- ŞİFRE EKRANI -->
+        <!-- KAPI 1: SHA-256 ŞİFRE EKRANI -->
         <div id="admin-login-card" class="bg-stone-950 border border-amber-900/40 p-6 sm:p-8 rounded-2xl max-w-sm w-full text-center gold-glow">
             <span class="text-4xl mb-4 block">🔑</span>
             <h3 class="font-cinzel text-lg text-amber-500 uppercase tracking-widest mb-6">Arşiv Giriş Mührü</h3>
@@ -169,6 +169,21 @@
             <div class="flex gap-3">
                 <button onclick="closeAdminModal()" class="w-1/2 border border-stone-800 text-stone-400 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-stone-900 transition">Kapat</button>
                 <button onclick="verifyAdminPassword()" class="w-1/2 bg-amber-900/60 border border-amber-500/40 text-amber-200 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-amber-800/80 transition">Mührü Aç</button>
+            </div>
+        </div>
+
+        <!-- KAPI 2: SUPABASE AUTH EKRANI -->
+        <div id="supabase-auth-card" class="bg-stone-950 border border-amber-900/40 p-6 sm:p-8 rounded-2xl max-w-sm w-full text-center gold-glow hidden">
+            <span class="text-4xl mb-4 block">🛡️</span>
+            <h3 class="font-cinzel text-lg text-emerald-500 uppercase tracking-widest mb-2">Veritabanı Kimliği</h3>
+            <p class="text-[10px] text-stone-400 mb-6 font-sans">İçerik eklemek için Supabase yönetici hesabınızla bağlanın.</p>
+            
+            <input type="email" id="sb-email" placeholder="Supabase E-Posta Adresi" class="w-full bg-stone-900 border border-amber-950 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-center text-white mb-3 font-sans text-sm">
+            <input type="password" id="sb-pass" placeholder="Supabase Şifresi" class="w-full bg-stone-900 border border-amber-950 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-center text-white mb-6 font-sans text-sm">
+            
+            <div class="flex gap-3">
+                <button onclick="closeAdminModal()" class="w-1/2 border border-stone-800 text-stone-400 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-stone-900 transition">İptal</button>
+                <button id="sb-login-btn" onclick="loginSupabaseAuth()" class="w-1/2 bg-emerald-900/60 border border-emerald-500/40 text-emerald-200 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-emerald-800/80 transition">Bağlan</button>
             </div>
         </div>
 
@@ -182,8 +197,8 @@
                     <h3 class="font-cinzel text-sm sm:text-base text-amber-500 uppercase tracking-widest font-bold">Kraliyet Arşiv Ofisi</h3>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button id="db-sync-btn" onclick="syncWithSupabasePrompt()" class="bg-amber-950/40 hover:bg-amber-800/50 border border-amber-700/40 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-sans transition flex items-center gap-1.5">
-                        ⚙️ Supabase Ayarı
+                    <button onclick="logoutSupabaseAuth()" class="border border-stone-800 text-stone-400 hover:text-red-400 hover:border-red-900/50 px-4 py-1.5 rounded transition duration-300 bg-stone-950/50 text-xs font-sans">
+                        🚪 Çıkış Yap
                     </button>
                     <button onclick="closeAdminModal()" class="text-stone-400 hover:text-white transition text-xl">&times;</button>
                 </div>
@@ -323,37 +338,27 @@
         </div>
     </div>
 
-    <!-- SUPABASE BAĞLANTI MODALI -->
-    <div id="supabase-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-stone-950 border border-amber-900/40 p-6 sm:p-8 rounded-2xl max-w-md w-full gold-glow">
-            <h3 class="font-cinzel text-sm text-amber-500 uppercase tracking-widest mb-6">Supabase Bağlantı Paneli</h3>
-            <div class="space-y-4 text-xs font-sans">
-                <div>
-                    <label class="block text-zinc-500 mb-1">Project URL Address</label>
-                    <input type="text" id="sb-url-input" class="w-full bg-stone-900 border border-zinc-800 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-white">
-                </div>
-                <div>
-                    <label class="block text-zinc-500 mb-1">Anon API Public Key</label>
-                    <textarea id="sb-key-input" rows="4" class="w-full bg-stone-900 border border-zinc-800 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-white"></textarea>
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeSupabaseModal()" class="w-1/2 border border-stone-800 text-stone-400 rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-stone-900 transition">Vazgeç</button>
-                <button onclick="connectToSupabase()" class="w-1/2 bg-amber-500 text-stone-950 font-bold rounded-lg py-2.5 text-xs font-cinzel uppercase tracking-widest hover:bg-amber-400 transition">Bağlan</button>
-            </div>
-        </div>
-    </div>
-
     <!-- JAVASCRIPT ÇEKİRDEK MOTORU -->
     <script>
         // =========================================================================
-        // 🔑 GÜVENLİK VE BAĞLANTI AYARLARI (BURALARI KENDİ BİLGİLERİNLE DOLDUR)
+        // 🔑 SUPABASE CANLI BAĞLANTI AYARLARI (GÜVENLİ & SABİT)
         // =========================================================================
-        const SUPABASE_URL = "";      // Kendi Supabase Proje URL'ini buraya yaz
-        const SUPABASE_KEY = "";      // Kendi Supabase Anon Key'ini buraya yaz
+        const SUPABASE_URL = "https://frwmpokqgnsdpsumfobp.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"; 
         
-        // 🔒 "tolkien" ŞİFRESİNİ DEĞİŞTİRMEK İÇİN BURADAKİ DEĞERİ KENDİ GİZLİ ŞİFREN YAP KANKA!
-        const ADMIN_PASSWORD = "tolkien"; 
+        // 🔒 "KAPI 1" GÜVENLİK ANAHTARI (SHA-256 HASH)
+        const ADMIN_PASSWORD_HASH = "103259ce93031a9d07c0af5a82b189f6300e2f241f7cbd65351def8e40a57cd9";
+
+        // =========================================================================
+        // 🛡️ WEB CRYPTO API İLE GÜVENLİK MOTORU (DOKUNMA)
+        // =========================================================================
+        async function hashText(text) {
+            const msgUint8 = new TextEncoder().encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
 
         // =========================================================================
         // 🔮 KÜTÜPHANE AYARLARI VE GLOBAL STATE
@@ -405,44 +410,6 @@
 
         const SEKMELER = ["Yazıtlar", "Karakterler", "Görseller"];
 
-        let defaultArticles = [
-            {
-                id: 101,
-                title: "Galadriel'in Aynası",
-                desc: "Ayna, geçmişi, bugünü ve henüz gerçekleşmemiş gelecek olayları gösterebilen mistik bir su çanağıdır. Galadriel, Frodo'ya aynaya bakmasını söylediğinde şu kadim sözleri nakşetmiştir: 'En bilge olanlar bile her şeyi göremez.'\n\n[gorsel: https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80]\n\nBu su kabı, sadece Lorien'in Hanımı tarafından doldurulduğunda ve onun iradesiyle çalışır.",
-                image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=600&q=80",
-                video: "",
-                race: "Elfler",
-                tab: "Yazıtlar",
-                stats: null
-            },
-            {
-                id: 102,
-                title: "Feanor'un Silmarilleri",
-                desc: "Feanor'un Valinor'un iki ağacının ışığıyla yoğurduğu, dünyadaki en değerli üç taştır. Bu taşların güzelliği ve gücü karşısında Melkor dahi diz çökmüş, onları çalarak tacına yerleştirmiştir.",
-                image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80",
-                video: "https://www.youtube.com/watch?v=A8vN9fPZ-O8",
-                race: "Elfler",
-                tab: "Yazıtlar",
-                stats: null
-            },
-            {
-                id: 103,
-                title: "Kral Aragorn (Elessar)",
-                desc: "Kuzey Kolcuları'nın şefi, Elendil'in soyundan gelen meşru kraldır. Yıllarca yolcu adı altında gizlenmiş, yüzük savaşı sonrasında tacını giymiş ve Gondor'u refaha kavuşturmuştur.",
-                image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
-                video: "",
-                race: "İnsanlar",
-                tab: "Karakterler",
-                stats: {
-                    weapon: "Andúril (Batı'nın Alevi)",
-                    object: "Barahir'in Yüzüğü",
-                    born: "3. Çağ 2931",
-                    attributes: { str: 18, dex: 16, con: 17, int: 14, wis: 16, cha: 18 }
-                }
-            }
-        ];
-
         let state = {
             currentRace: "Elfler",
             currentTab: "Yazıtlar",
@@ -488,54 +455,16 @@
         // 💾 SUPABASE BAĞLANTI SİSTEMİ
         // =========================================================================
         function initSupabase() {
-            // Eğer koda hardcode edilmiş anahtar varsa öncelikli olarak onları kullan:
-            const url = SUPABASE_URL || localStorage.getItem('sb_url');
-            const key = SUPABASE_KEY || localStorage.getItem('sb_key');
             const badge = document.getElementById('db-status-badge');
-
-            if (url && key) {
-                try {
-                    supabaseClient = supabase.createClient(url, key);
-                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>Supabase Canlı</span>`;
-                    badge.classList.remove('bg-amber-950/40', 'border-amber-700/30', 'text-amber-300');
-                    badge.classList.add('bg-emerald-950/40', 'border-emerald-700/30', 'text-emerald-300');
-                    document.getElementById('db-sync-btn').textContent = "🟢 Supabase Bağlı";
-                } catch (err) {
-                    console.error("Supabase başlatma hatası:", err);
-                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Bağlantı Hatası</span>`;
-                }
-            } else {
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>Lokal Hafıza</span>`;
+            try {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>Supabase Bağlı</span>`;
+                badge.classList.remove('bg-amber-950/40', 'border-amber-700/30', 'text-amber-300');
+                badge.classList.add('bg-emerald-950/40', 'border-emerald-700/30', 'text-emerald-300');
+            } catch (err) {
+                console.error("Supabase başlatma hatası:", err);
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span>Bağlantı Hatası</span>`;
             }
-        }
-
-        function syncWithSupabasePrompt() {
-            document.getElementById('sb-url-input').value = SUPABASE_URL || localStorage.getItem('sb_url') || '';
-            document.getElementById('sb-key-input').value = SUPABASE_KEY || localStorage.getItem('sb_key') || '';
-            document.getElementById('supabase-modal').classList.remove('hidden');
-        }
-
-        function closeSupabaseModal() {
-            document.getElementById('supabase-modal').classList.add('hidden');
-        }
-
-        function connectToSupabase() {
-            const url = document.getElementById('sb-url-input').value.trim();
-            const key = document.getElementById('sb-key-input').value.trim();
-
-            if (!url || !key) {
-                localStorage.removeItem('sb_url');
-                localStorage.removeItem('sb_key');
-                supabaseClient = null;
-                showToast("Lokal Hafıza moduna geçiş yapıldı.");
-            } else {
-                localStorage.setItem('sb_url', url);
-                localStorage.setItem('sb_key', key);
-                showToast("Supabase bilgileri kaydedildi! ✔");
-            }
-            closeSupabaseModal();
-            initSupabase();
-            loadArticles();
         }
 
         // =========================================================================
@@ -598,7 +527,6 @@
                 let endPos = textarea.selectionEnd;
                 const text = textarea.value;
 
-                // EĞER KULLANICI KUTUNUN İÇİNDE BİR YERE TIKLAMADYSA, GÖRSELİ DOĞRUDAN YAZININ EN SONUNA EKLE
                 if (startPos === 0 && endPos === 0 && text.length > 0) {
                     startPos = text.length;
                     endPos = text.length;
@@ -664,24 +592,11 @@
                     state.articles = dbArticles || [];
                 } catch (err) {
                     console.error("Supabase veri çekme hatası:", err);
-                    loadLocalArticles();
+                    state.articles = [];
                 }
-            } else {
-                loadLocalArticles();
             }
-
             await loadBgSettings();
             render();
-        }
-
-        function loadLocalArticles() {
-            const raw = localStorage.getItem('local_articles');
-            if (raw) {
-                state.articles = JSON.parse(raw);
-            } else {
-                state.articles = [...defaultArticles];
-                localStorage.setItem('local_articles', JSON.stringify(state.articles));
-            }
         }
 
         async function loadBgSettings() {
@@ -695,17 +610,10 @@
 
                     if (!error && data && data.stats) {
                         state.bgSettings = data.stats;
-                        applyBgStyles();
-                        return;
                     }
                 } catch (err) {
                     console.error("Bulut arka plan yükleme hatası:", err);
                 }
-            }
-            
-            const raw = localStorage.getItem('bg_settings');
-            if (raw) {
-                state.bgSettings = JSON.parse(raw);
             }
             applyBgStyles();
         }
@@ -774,8 +682,6 @@
                                 stats: state.bgSettings
                             });
                     }
-                } else {
-                    localStorage.setItem('bg_settings', JSON.stringify(state.bgSettings));
                 }
 
                 applyBgStyles();
@@ -851,44 +757,26 @@
                 };
             }
 
-            const record = {
-                title,
-                desc,
-                image: finalImage,
-                video,
-                race,
-                tab,
-                stats
-            };
+            const record = { title, desc, image: finalImage, video, race, tab, stats };
 
             if (supabaseClient) {
                 try {
                     const { error } = await supabaseClient.from('articles').insert([record]);
                     if (error) throw error;
                     showToast("Yazıt başarıyla buluta nakşedildi! ✔");
+                    resetForm();
+                    closeAdminModal();
+                    loadArticles();
                 } catch (err) {
                     console.error("Bulut kaydetme hatası:", err);
-                    showToast("Buluta kaydedilemedi, lokale yazılıyor...", true);
-                    saveToLocalStorage(record);
+                    showToast("Buluta kaydedilemedi. Hata: " + err.message, true);
                 }
             } else {
-                saveToLocalStorage(record);
+                showToast("Veritabanı bağlantısı bulunamadı!", true);
             }
-
-            resetForm();
-            closeAdminModal();
-            loadArticles();
             
             btn.disabled = false;
             btn.innerHTML = `<span>💾 Yazıtı Kaydet</span>`;
-        }
-
-        function saveToLocalStorage(record) {
-            record.id = Date.now();
-            const local = JSON.parse(localStorage.getItem('local_articles')) || [...defaultArticles];
-            local.unshift(record);
-            localStorage.setItem('local_articles', JSON.stringify(local));
-            showToast("Yazıt başarıyla lokal hafızaya nakşedildi! ✔");
         }
 
         function resetForm() {
@@ -901,27 +789,6 @@
             document.getElementById('c-object').value = "";
             document.getElementById('c-born').value = "";
             tempCoverImageBase64 = "";
-        }
-
-        // =========================================================================
-        // ⚔️ BOŞ VERİTABANI DOLDURUCU (SEEDER)
-        // =========================================================================
-        async function seederInitialData() {
-            if (supabaseClient) {
-                showToast("Canlı veritabanı şablonlarla dolduruluyor...");
-                try {
-                    const { error } = await supabaseClient.from('articles').insert(defaultArticles);
-                    if (error) throw error;
-                    showToast("Veritabanı başarıyla canlandırıldı! ⚡");
-                } catch (err) {
-                    console.error("Seed hatası:", err);
-                    showToast("Veritabanı doldurma işlemi başarısız.", true);
-                }
-            } else {
-                localStorage.setItem('local_articles', JSON.stringify(defaultArticles));
-                showToast("Lokal hafıza fabrika ayarlarına döndürüldü. ⚡");
-            }
-            loadArticles();
         }
 
         // =========================================================================
@@ -1024,19 +891,15 @@
             filtered.forEach(article => {
                 const col = document.createElement('div');
                 
-                // MOBİLDE 3D KARTLARIN DOKUNUNCA DOĞRUDAN AÇILMA HATASINI SIFIR RISKLE ÇÖZEN YAPI:
                 if (state.currentTab === "Karakterler" && article.stats) {
                     col.className = "flip-card h-96 w-full cursor-pointer";
-                    // Tıklanınca .flipped class'ını ekle/çıkar (Mobilde dokunma desteği için)
                     col.onclick = (e) => {
-                        // Eğer tıklanan şey bir buton değilse sadece kartı döndür
                         if (e.target.tagName !== 'BUTTON') {
                             col.classList.toggle('flipped');
                         }
                     };
                     col.innerHTML = `
                         <div class="flip-card-inner h-full w-full">
-                            <!-- ÖN YÜZ -->
                             <div class="flip-card-front bg-stone-950/95 border ${IRKLAR[state.currentRace].border} p-6 flex flex-col justify-between items-center gold-glow-hover transition-all duration-300">
                                 <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 mb-4 shadow-lg shadow-black">
                                     <img src="${article.image}" class="w-full h-full object-cover">
@@ -1048,9 +911,8 @@
                                 <div class="text-stone-400 text-xs text-center line-clamp-3 italic px-2">
                                     "${article.desc.substring(0, 100)}..."
                                 </div>
-                                <span class="text-[10px] text-amber-500/60 font-sans uppercase tracking-widest mt-4">✦ İstatistikler / Hikaye İçin Dokun ✦</span>
+                                <span class="text-[10px] text-amber-500/60 font-sans uppercase tracking-widest mt-4">✦ İstatistikler İçin Dokun ✦</span>
                             </div>
-                            <!-- ARKA YÜZ -->
                             <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-6 flex flex-col justify-between">
                                 <div class="border-b border-amber-950 pb-3">
                                     <h4 class="font-cinzel text-sm text-amber-500 tracking-wider mb-1">${article.title}</h4>
@@ -1166,17 +1028,19 @@
         }
 
         // =========================================================================
-        // 🏰 ADMİN MODAL KONTROLLERİ (GÜVENLİ ŞİFRE SİSTEMİ)
+        // 🏰 ADMİN MODAL KONTROLLERİ (ÇİFT KALKANLI GÜVENLİK)
         // =========================================================================
         function openAdminModal() {
             document.getElementById('admin-modal').classList.remove('hidden');
-            const isAuth = sessionStorage.getItem('admin_session');
-            if (isAuth) {
+            
+            // Eğer daha önceden 1. kapıyı (Geçit kelimesi) geçtiysek
+            const passedGate1 = sessionStorage.getItem('admin_gate_1');
+            if (passedGate1) {
                 document.getElementById('admin-login-card').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('hidden');
-                populateAdminOptions();
+                checkSupabaseSession(); // 2. kapıya geç
             } else {
                 document.getElementById('admin-login-card').classList.remove('hidden');
+                document.getElementById('supabase-auth-card').classList.add('hidden');
                 document.getElementById('admin-panel').classList.add('hidden');
             }
         }
@@ -1185,19 +1049,87 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
-        // GÜVENLİ VE DIŞARIDAN OKUNAMAYAN GÜNCEL ŞİFRE KONTROL MOTORU
-        function verifyAdminPassword() {
+        // KAPI 1: SHA-256 DOĞRULAMASI
+        async function verifyAdminPassword() {
             const pass = document.getElementById('admin-pass').value.trim();
-            // Artık düz yazı şifre kontrolü yerine üstte tanımladığın ADMIN_PASSWORD değişkenine bakıyor!
-            if (pass === ADMIN_PASSWORD) {
-                sessionStorage.setItem('admin_session', 'true');
+            const hashedPass = await hashText(pass);
+            
+            if (hashedPass === ADMIN_PASSWORD_HASH) {
+                sessionStorage.setItem('admin_gate_1', 'true');
                 document.getElementById('admin-login-card').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('hidden');
-                populateAdminOptions();
-                showToast("Arşiv odasına hoş geldin, efendim. 🏰");
+                document.getElementById('admin-pass').value = '';
+                checkSupabaseSession(); // Kapı 1 açıldı, Kapı 2'ye (Supabase) git
             } else {
                 showToast("Geçit kelimesi yanlış! 🛑", true);
             }
+        }
+
+        // KAPI 2: SUPABASE AUTH OTURUM KONTROLÜ
+        async function checkSupabaseSession() {
+            if (!supabaseClient) {
+                showToast("Veritabanı bağlantısı henüz kurulamadı.", true);
+                return;
+            }
+
+            const { data, error } = await supabaseClient.auth.getSession();
+            
+            if (data?.session) {
+                // Supabase'de zaten oturum var, direkt paneli aç
+                openDashboardPanel();
+            } else {
+                // Oturum yok, e-posta şifre ekranını göster
+                document.getElementById('supabase-auth-card').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+        }
+
+        // SUPABASE GİRİŞ İŞLEMİ
+        async function loginSupabaseAuth() {
+            const email = document.getElementById('sb-email').value.trim();
+            const password = document.getElementById('sb-pass').value.trim();
+            const btn = document.getElementById('sb-login-btn');
+            
+            if(!email || !password) {
+                showToast("E-Posta ve Şifre zorunludur!", true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Bağlanıyor...";
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                showToast("Bağlantı Hatası: " + error.message, true);
+                btn.disabled = false;
+                btn.innerHTML = "Bağlan";
+            } else {
+                showToast("Veritabanına başarıyla bağlanıldı! 🟢");
+                document.getElementById('supabase-auth-card').classList.add('hidden');
+                btn.disabled = false;
+                btn.innerHTML = "Bağlan";
+                openDashboardPanel();
+            }
+        }
+
+        // SUPABASE ÇIKIŞ İŞLEMİ
+        async function logoutSupabaseAuth() {
+            if(supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            sessionStorage.removeItem('admin_gate_1');
+            showToast("Oturum güvenle kapatıldı.");
+            closeAdminModal();
+        }
+
+        // NİHAİ ADMİN PANELİNİ AÇMA
+        function openDashboardPanel() {
+            document.getElementById('supabase-auth-card').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+            populateAdminOptions();
         }
 
         function populateAdminOptions() {
@@ -1220,35 +1152,20 @@
             });
         }
 
-        // =========================================================================
-        // 📣 TOAST UYARI BİLDİRİM MOTORU
-        // =========================================================================
-        let toastTimeout;
-        function showToast(text, isError = false) {
-            const box = document.getElementById('toast-box');
-            const content = document.getElementById('toast-content');
-            const icon = document.getElementById('toast-icon');
-            const txt = document.getElementById('toast-text');
-
-            txt.textContent = text;
-            icon.textContent = isError ? "🛑" : "📜";
-
-            if (isError) {
-                content.classList.add('border-red-500/50', 'text-red-300');
-                content.classList.remove('border-amber-500/40', 'text-amber-200');
-            } else {
-                content.classList.add('border-amber-500/40', 'text-amber-200');
-                content.classList.remove('border-red-500/50', 'text-red-300');
+        // SEED BOŞ VERİTABANI (EĞER İHTİYAÇ OLURSA)
+        async function seederInitialData() {
+            if (supabaseClient) {
+                showToast("Canlı veritabanı şablonlarla dolduruluyor...");
+                try {
+                    const { error } = await supabaseClient.from('articles').insert(defaultArticles);
+                    if (error) throw error;
+                    showToast("Veritabanı başarıyla canlandırıldı! ⚡");
+                } catch (err) {
+                    console.error("Seed hatası:", err);
+                    showToast("İşlem başarısız (RLS kuralları nedeniyle engellenmiş olabilir).", true);
+                }
             }
-
-            box.classList.remove('opacity-0', 'translate-y-10');
-            box.classList.add('opacity-100', 'translate-y-0');
-
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                box.classList.add('opacity-0', 'translate-y-10');
-                box.classList.remove('opacity-100', 'translate-y-0');
-            }, 3000);
+            loadArticles();
         }
     </script>
 </body>
