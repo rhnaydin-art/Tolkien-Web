@@ -7,7 +7,7 @@
     <title>Tolkien Günlükleri | Orta Dünya Kütüphanesi</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Library (CDN Geri Yüklendi) -->
+    <!-- Supabase JS Library (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -163,18 +163,18 @@
     <!-- YÖNETİCİ GİRİŞ MODALI -->
     <div id="loginModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-zinc-950 p-8 rounded-xl border border-zinc-800 w-full max-w-md shadow-2xl relative">
-            <h3 class="text-2xl font-epic text-white tracking-wider mb-2 text-center" id="login-modal-title">Arşiv Sorumlusu</h3>
-            <p class="text-xs text-zinc-500 font-sans text-center mb-8 uppercase tracking-widest" id="login-modal-subtitle">Giriş izni gereklidir</p>
+            <h3 class="text-2xl font-epic text-white tracking-wider mb-2 text-center">Arşiv Sorumlusu</h3>
+            <p class="text-xs text-zinc-500 font-sans text-center mb-8 uppercase tracking-widest">Giriş izni gereklidir</p>
             
             <!-- Email Field -->
-            <div id="email-field-container" class="hidden mb-4">
+            <div id="email-field-container" class="mb-4">
                 <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-2 font-sans">Yönetici E-Posta</label>
                 <input type="email" id="adminEmail" placeholder="ornek@domain.com" class="w-full bg-black p-4 rounded border border-zinc-800 focus:border-amber-500 text-white text-center outline-none">
             </div>
 
             <div>
-                <label id="pass-label" class="hidden block text-zinc-400 text-[10px] uppercase tracking-widest mb-2 font-sans">Parola</label>
-                <input type="password" id="adminPassword" placeholder="Parolayı girin (tolkien)" class="w-full bg-black p-4 mb-4 rounded border border-zinc-800 focus:border-amber-500 text-white text-center tracking-widest outline-none">
+                <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-2 font-sans">Parola / Şifre</label>
+                <input type="password" id="adminPassword" placeholder="Parolanızı girin" class="w-full bg-black p-4 mb-4 rounded border border-zinc-800 focus:border-amber-500 text-white text-center outline-none">
             </div>
 
             <div id="loginError" class="text-red-500 text-xs font-sans text-center mb-4 hidden bg-red-950/30 py-2 rounded">Mühür kırılamadı! Giriş başarısız.</div>
@@ -202,7 +202,7 @@
                     <button onclick="switchAdminTab('content')" id="tab-btn-content" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded font-sans text-[9px] sm:text-[10px] uppercase tracking-widest bg-amber-600 text-black font-bold">Ekle/Düzenle</button>
                     <button onclick="switchAdminTab('manage')" id="tab-btn-manage" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded font-sans text-[9px] sm:text-[10px] uppercase tracking-widest bg-zinc-900 text-zinc-400 hover:text-white">Yönetim 📂</button>
                     <button onclick="switchAdminTab('appearance')" id="tab-btn-appearance" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded font-sans text-[9px] sm:text-[10px] uppercase tracking-widest bg-zinc-900 text-zinc-400 hover:text-white">Görünüm 🎨</button>
-                    <button onclick="openSettingsModal()" id="admin-supabase-btn" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded font-sans text-[9px] sm:text-[10px] uppercase tracking-widest bg-blue-900/50 border border-blue-500/50 text-blue-400 hover:bg-blue-800 transition">Supabase</button>
+                    <button onclick="handleLogout()" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded font-sans text-[9px] sm:text-[10px] uppercase tracking-widest bg-red-950 text-red-400 border border-red-900/50 hover:bg-red-900 hover:text-white transition">Çıkış Yap 🚪</button>
                     <button onclick="closeAdminPanel()" class="px-3 py-1.5 sm:px-4 sm:py-2 text-zinc-400 hover:text-white uppercase text-[9px] sm:text-[10px]">✕</button>
                 </div>
             </div>
@@ -311,22 +311,6 @@
 
                 <div class="flex justify-end border-t border-white/5 pt-4">
                     <button onclick="saveAppearanceSettings()" class="w-full sm:w-auto px-8 py-3 bg-white text-black font-epic font-bold text-xs sm:text-sm tracking-widest rounded hover:bg-zinc-200 transition cursor-pointer">Değişiklikleri Uygula</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SUPABASE AYARLARI -->
-    <div id="settingsModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-        <div class="bg-[#0a0a0a] p-6 sm:p-8 rounded-xl border border-blue-500/20 w-full max-w-md shadow-2xl">
-            <h3 class="text-lg sm:text-xl font-epic text-blue-400 tracking-wider mb-2">Veritabanı Bağlantısı</h3>
-            <p class="text-xs text-zinc-500 mb-6 font-sans">Canlı veri ve resim depolama bağlantısı kurun.</p>
-            <div class="space-y-4">
-                <input id="s-url" placeholder="Supabase Project URL" class="w-full bg-black p-3 rounded border border-zinc-800 focus:border-blue-500 text-white text-xs font-mono">
-                <input id="s-key" placeholder="Supabase Anon Key" class="w-full bg-black p-3 rounded border border-zinc-800 focus:border-blue-500 text-white text-xs font-mono">
-                <div class="flex gap-3 pt-4">
-                    <button onclick="saveSupabaseSettings()" class="flex-1 bg-blue-600 text-white text-xs font-bold tracking-widest py-3 rounded hover:bg-blue-500 transition">BAĞLAN</button>
-                    <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="flex-1 bg-zinc-900 text-zinc-400 text-xs tracking-widest py-3 rounded">İPTAL</button>
                 </div>
             </div>
         </div>
@@ -471,6 +455,7 @@
         let currentTabId = 'Tümü'; 
         let currentArticleId = null; 
         let supabaseClient = null;
+        let currentUserSession = null;
 
         let tempImageFile = null;      
         let tempBase64Image = null;    
@@ -484,7 +469,7 @@
             { id: 1, title: "Fëanor ve Silmariller", race: "Elfler", tab: "1. Çağ", image: "https://images.unsplash.com/photo-1519074069444-1ba4e6664104?auto=format&fit=crop&q=80&w=800", video: "https://www.youtube.com/watch?v=F3qco0F93iU", desc: "Noldor'un en yeteneklisi Fëanor, İki Ağaç'ın ışığını sonsuza dek hapsetmek amacıyla üç kutsal mücevher, yani Silmarilleri üretti. Fakat gururunun ve Melkor'un yalanlarının esiri oldu..." },
             { id: 2, title: "Galadriel Hanım", race: "Elfler", tab: "Karakterler", image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=800", desc: "Lothlórien'in Altın Ormanı'nı yöneten Galadriel, Orta Dünya'da kalmış olan en kudretli, en asil Elflerdendir. Güzelliği ve bilgeliği sadece dostlarına rehberlik etmedi, düşmanlarının da kalbine korku saldı...", stats: { weapon: "Aeglos / Nenya", object: "Galadriel'in Aynası", born: "Ağaçlar Çağı" } },
             { id: 3, title: "Küçük Cüce Mîm", race: "Cüceler", tab: "2. Çağ", image: "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&q=80&w=800", desc: "Küçük Cüceler soyunun son temsilcisi olan Mîm'in trajik öyküsü Amon Rûdh'da başlar. Turin Turambar'a sığınak sağlamış ancak daha sonra yakalanıp ihanet etmeye zorlanmıştır. Altın arzusu ve lanetli kaderi onu kaçınılmaz bir sona sürüklemiştir." },
-            { id: 4, title: "Saran Alev: Sauron", race: "Karanlık Güçler", tab: "Karakterler", image: "https://images.unsplash.com/photo-1550596334-7bb40a71b6bc?auto=format&fit=crop&q=80&w=1600", desc: "Melkor'un en sadık hizmetkarı olan Maia Sauron, Efendisinin düşüşünün ardından Orta Dünya'yı tamamen hakimiyeti altına almaya çalıştı. Tek Yüzük'ü döverek çağlar boyunca sürecek bir savaşa ve karanlığa imza attı...", stats: { weapon: "Kara Gürz", object: "Tek Yüzük", born: "Zamanın Öncesi (Maiar)" } },
+            { id: 4, title: "Saran Alev: Sauron", race: "Karanlık Güçler", tab: "Karakterler", image: "https://images.unsplash.com/photo-1550596334-7bb40a71b6bc?auto=format&fit=crop&q=80&w=1600", desc: "Melkor'un en sadık hizmetkarı olan Maia Sauron, Efendirinin düşüşünün ardından Orta Dünya'yı tamamen hakimiyeti altına almaya çalıştı. Tek Yüzük'ü döverek çağlar boyunca sürecek bir savaşa ve karanlığa imza attı...", stats: { weapon: "Kara Gürz", object: "Tek Yüzük", born: "Zamanın Öncesi (Maiar)" } },
             { id: 5, title: "Tek Yüzük", race: "Karanlık Güçler", tab: "Emanetler & Eserler", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800", desc: "Sauron tarafından Hüküm Dağı'nın alevlerinde dövülen, diğer tüm Güç Yüzüklerine hükmeden tek ve mutlak yüzük. Üzerinde Elf rünleriyle yazılmış kadim bir yazı parıldar: 'Hepsine hükmedecek Bir Yüzük, hepsini o bulacak, hepsini bir araya getirip karanlıkta birbirine bağlayacak.'" },
             { id: 6, title: "Ancalagon the Black", race: "Karanlık Güçler", tab: "Bestiary", image: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=800", desc: "Morgoth'un yarattığı en büyük ve en dehşet verici kanatlı ejderha. Öfke Savaşı'nda gökyüzünü kaplayan kara bir bulut gibi yükselmiş, nefesiyle orduları küle çevirmiştir. Sonunda Eärendil tarafından mağlup edilerek Thangorodrim kulelerinin üzerine düşmüş ve kuleleri yerle bir etmiştir." },
             { id: 7, title: "Gondolin'in Düşüşü", race: "Elfler", tab: "Destansı Savaşlar", image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800", desc: "Kral Turgon'un gizli şehri Gondolin'in Maeglin'in ihanetiyle Morgoth'un orduları tarafından keşfedilip kuşatılmasıyla gerçekleşen, Birinci Çağ'ın en trajik savaşı. Ejderhalar, Balroglar ve yüz binlerce ork gizli vadiyi aşarak ak şehri alevler içinde bırakmıştır." },
@@ -492,33 +477,27 @@
         ];
 
         function initSupabase() {
-            const url = SUPABASE_URL || localStorage.getItem('sb_url');
-            const key = SUPABASE_KEY || localStorage.getItem('sb_key');
+            const url = SUPABASE_URL;
+            const key = SUPABASE_KEY;
             const badge = document.getElementById('db-status-badge');
-            
-            const emailField = document.getElementById('email-field-container');
-            const passLabel = document.getElementById('pass-label');
-            const passInput = document.getElementById('adminPassword');
-            const loginSubtitle = document.getElementById('login-modal-subtitle');
 
             if (url && key) {
                 try {
                     supabaseClient = supabase.createClient(url, key);
-                    if (badge) {
-                        badge.textContent = "Supabase Canlı";
-                        badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] tracking-widest border border-emerald-500/30 text-emerald-400 bg-emerald-950/20";
-                    }
                     
-                    if (emailField) emailField.classList.remove('hidden');
-                    if (passLabel) passLabel.classList.remove('hidden');
-                    if (passInput) {
-                        passInput.placeholder = "Yönetici şifreniz";
-                        passInput.classList.remove('text-center', 'tracking-widest');
-                    }
-                    if (loginSubtitle) loginSubtitle.textContent = "Supabase Güvenli Oturumu";
-                    
-                    const sbBtn = document.getElementById('admin-supabase-btn');
-                    if (sbBtn && SUPABASE_URL) sbBtn.classList.add('hidden');
+                    // Listen to active session changes
+                    supabaseClient.auth.onAuthStateChange((event, session) => {
+                        currentUserSession = session;
+                        if (badge) {
+                            if (session) {
+                                badge.textContent = "Oturum Açık 🔓";
+                                badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] font-epic tracking-widest border border-emerald-500/30 text-emerald-400 bg-emerald-950/20";
+                            } else {
+                                badge.textContent = "Supabase Canlı";
+                                badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] font-epic tracking-widest border border-blue-500/30 text-blue-400 bg-blue-950/20";
+                            }
+                        }
+                    });
                     
                     return true;
                 } catch (e) { console.error(e); }
@@ -526,19 +505,8 @@
             
             if (badge) {
                 badge.textContent = "Lokal Bellek";
-                badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] tracking-widest border border-red-500/30 text-red-400 bg-red-950/20";
+                badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] font-epic tracking-widest border border-red-500/30 text-red-400 bg-red-950/20";
             }
-            
-            if (emailField) emailField.classList.add('hidden');
-            if (passLabel) passLabel.classList.add('hidden');
-            if (passInput) {
-                passInput.placeholder = "Parolayı girin (tolkien)";
-                passInput.classList.add('text-center', 'tracking-widest');
-            }
-            if (loginSubtitle) loginSubtitle.textContent = "Giriş izni gereklidir";
-            
-            const sbBtn = document.getElementById('admin-supabase-btn');
-            if (sbBtn) sbBtn.classList.remove('hidden');
             
             supabaseClient = null;
             return false;
@@ -653,7 +621,7 @@
                 await fetchArticles();
             } catch (err) {
                 console.error(err);
-                showToast("Veriler mühürlenemedi!", true);
+                showToast("Veriler mühürlenemedi: " + err.message, true);
                 document.getElementById('db-seed-btn').textContent = "⚡ Tekrar Dene";
             }
         }
@@ -975,9 +943,9 @@
                                     ${formatLoreText(article.desc)}
                                 </div>
                                 
-                                <div class="mt-12 pt-8 border-t border-white/5 flex justify-center sm:justify-start">
+                                <div class="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
                                     <button onclick="navigate('race', '${article.race}')" 
-                                            class="px-6 py-3 border border-amber-500/30 rounded-lg text-amber-400 hover:text-black hover:bg-amber-500 font-epic text-xs tracking-widest transition duration-300 uppercase cursor-pointer">
+                                            class="w-full sm:w-auto px-6 py-3 border border-amber-500/30 rounded-lg text-amber-400 hover:text-black hover:bg-amber-500 font-epic text-xs tracking-widest transition duration-300 uppercase cursor-pointer">
                                         ← Kütüphaneye Dön
                                     </button>
                                 </div>
@@ -1004,7 +972,7 @@
             const toast = document.getElementById('toast');
             document.getElementById('toast-message').textContent = msg;
             toast.className = `fixed bottom-6 right-6 z-[200] transform transition-all duration-300 flex items-center gap-3 px-5 py-4 rounded-lg shadow-2xl font-sans text-sm border ${err ? 'bg-red-950 border-red-800 text-red-200' : 'bg-zinc-950 border-amber-900/50 text-amber-400'} translate-y-0 opacity-100`;
-            setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-20'); toast.classList.replace('opacity-100', 'opacity-0'); }, 3500);
+            setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-20'); toast.classList.replace('opacity-100', 'opacity-0'); }, 4000);
         }
 
         function playEmbeddedVideo(videoId) {
@@ -1104,11 +1072,24 @@
     </script>
 
     <script>
-        function openAdminModal() {
+        async function openAdminModal() {
+            if (supabaseClient) {
+                // Check if active user session is stored in client memory
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    // Session exists! Bypass password modal entirely and open panel
+                    currentUserSession = session;
+                    openAdminPanel();
+                    return;
+                }
+            }
+            
+            // Otherwise, show standard login screen
             document.getElementById('loginModal').classList.remove('hidden');
             document.getElementById('adminPassword').value = '';
             const emailInput = document.getElementById('adminEmail');
             if (emailInput) emailInput.value = '';
+            document.getElementById('loginError').classList.add('hidden');
         }
         
         function closeAdminModal() {
@@ -1129,7 +1110,7 @@
             if (supabaseClient) {
                 if (!email || !pass) {
                     if (errDiv) {
-                        errDiv.textContent = "Mühür Kırılamadı! Lütfen e-posta ve şifrenizi girin.";
+                        errDiv.textContent = "Lütfen e-posta ve şifrenizi girin.";
                         errDiv.classList.remove('hidden');
                     }
                     return;
@@ -1141,13 +1122,14 @@
                     });
                     if (error) throw error;
                     
+                    currentUserSession = data.session;
                     closeAdminModal();
                     openAdminPanel();
                     showToast("Güvenli yönetici oturumu açıldı!");
                 } catch (err) {
                     console.error(err);
                     if (errDiv) {
-                        errDiv.textContent = "Mühür kırılamadı! Geçersiz e-posta veya şifre.";
+                        errDiv.textContent = "Hata: " + err.message;
                         errDiv.classList.remove('hidden');
                     }
                 }
@@ -1163,6 +1145,21 @@
                     }
                 }
             }
+        }
+
+        async function handleLogout() {
+            if (supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.auth.signOut();
+                    if (error) throw error;
+                } catch (err) {
+                    console.error("Signout error:", err);
+                }
+            }
+            currentUserSession = null;
+            closeAdminPanel();
+            showToast("Oturum kapatıldı, güvenli çıkış yapıldı.");
+            render();
         }
 
         function openAdminPanel() {
@@ -1182,15 +1179,6 @@
                 opt.value = t; opt.textContent = t;
                 tabSel.appendChild(opt);
             });
-
-            const sbBtn = document.getElementById('admin-supabase-btn');
-            if (sbBtn) {
-                if (SUPABASE_URL) {
-                    sbBtn.classList.add('hidden');
-                } else {
-                    sbBtn.classList.remove('hidden');
-                }
-            }
 
             document.getElementById('set-home-bg').value = appSettings.homeBg;
             const raceBgContainer = document.getElementById('race-bg-inputs');
@@ -1399,7 +1387,7 @@
             if (supabaseClient) {
                 const { error } = await supabaseClient.from('articles').delete().eq('id', articleToDeleteId);
                 if (error) {
-                    showToast("Mühür silinemedi! Sunucu hatası.", true);
+                    showToast("Mühür silinemedi! Hata: " + error.message, true);
                     closeDeleteConfirmModal();
                     return;
                 }
@@ -1463,7 +1451,7 @@
                     const { error } = await supabaseClient.from('articles').update(newObj).eq('id', editingArticleId);
                     if (error) { 
                         document.getElementById('save-loader').classList.add('hidden'); 
-                        return showToast("Güncelleme hatası!", true); 
+                        return showToast("Güncelleme hatası: " + error.message, true); 
                     }
                 } else {
                     const index = articles.findIndex(a => a.id == editingArticleId);
@@ -1480,14 +1468,14 @@
                     const { error } = await supabaseClient.from('articles').insert([newObj]);
                     if (error) { 
                         document.getElementById('save-loader').classList.add('hidden'); 
-                        return showToast("Kayıt hatası!", true); 
+                        return showToast("Ekleme başarısız! Hata: " + error.message, true); 
                     }
                 } else {
                     newObj.id = articles.length > 0 ? Math.max(...articles.map(a => a.id || 0)) + 1 : 1;
                     articles.unshift(newObj);
                     localStorage.setItem('local_articles', JSON.stringify(articles));
                 }
-                showToast("İçerik arşive işlendi!");
+                showToast("İçerik başarıyla arşive işlendi!");
                 cancelEdit();
             }
 
@@ -1527,26 +1515,19 @@
             showToast("Tüm görseller ve ayarlar kaydedildi!");
             render();
         }
-
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function saveSupabaseSettings() {
-            const u = document.getElementById('s-url').value.trim(), k = document.getElementById('s-key').value.trim();
-            if (u && k) { localStorage.setItem('sb_url', u); localStorage.setItem('sb_key', k); showToast("Bağlantı kuruluyor."); }
-            else { localStorage.removeItem('sb_url'); localStorage.removeItem('sb_key'); showToast("Lokal mod.", true); }
-            document.getElementById('settingsModal').classList.add('hidden');
-            initSupabase(); fetchArticles();
-        }
     </script>
 
     <script>
-        window.onload = () => { initSupabase(); fetchArticles(); }
+        window.onload = () => { 
+            initSupabase(); 
+            fetchArticles(); 
+        }
         
         document.addEventListener('keydown', e => {
             if(e.key === 'Escape') { 
                 closeAdminModal(); 
                 closeAdminPanel(); 
                 closeDeleteConfirmModal();
-                document.getElementById('settingsModal').classList.add('hidden'); 
             }
         });
 
