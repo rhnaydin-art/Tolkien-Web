@@ -6,9 +6,9 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Tolkien Günlükleri | Orta Dünya Kütüphanesi</title>
     <!-- Tailwind CSS -->
-    <script src="sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"></script>
+    <script src="https://frwmpokqgnsdpsumfobp.supabase.co"></script>
     <!-- Supabase JS Library -->
-    <script src="sb_secret_wAlOaHxrJnL8WFsOZRS_pQ_EcKJeO1h"></script>
+    <script src="sb_publishable_RsSMMTdpvb8LV4H55yaPCA_PyY-mbPj"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
@@ -192,8 +192,11 @@
             
             <!-- Üst Header ve Sekmeler -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-4 mb-6 gap-4">
-                <div>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                     <h3 class="text-xl sm:text-2xl font-epic text-amber-400 tracking-wider">KONTROL PANELİ</h3>
+                    <button id="db-seed-btn" onclick="seedDatabase()" class="hidden px-3 py-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-black font-bold font-sans text-[10px] tracking-wider uppercase rounded-full shadow-lg transition">
+                        ⚡ Boş Veritabanını Doldur
+                    </button>
                 </div>
                 <div class="flex flex-wrap gap-2 w-full md:w-auto">
                     <button onclick="switchAdminTab('content')" id="tab-btn-content" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded font-sans text-[9px] sm:text-[10px] uppercase tracking-widest bg-amber-600 text-black font-bold">Ekle/Düzenle</button>
@@ -355,11 +358,9 @@
         // ==========================================
         // 🛡️ KADİM SUNUCU KİLİTLEME AYARLARI
         // ==========================================
-        // Siteni tamamen canlıya bağlamak için aşağıdaki iki değişkeni kendi Supabase bilgilerine göre doldur.
-        // Bilgileri girdiğin an, site dünyadaki herkes için "Supabase Canlı" moduna kilitlenir; 
-        // "tolkien" şifresi ve "Supabase" ayar butonları tamamen ortadan kalkar!
-        const SUPABASE_URL = ""; // Örn: "https://your-project.supabase.co"
-        const SUPABASE_KEY = ""; // Örn: "eyJhbGciOiJIUzI1NiIsIn..."
+        // Burayı VS Code ile kendi bilgilerine göre doldur ve kaydet!
+        const SUPABASE_URL = ""; // Kendi Supabase URL'ini buraya yaz
+        const SUPABASE_KEY = ""; // Kendi Anon Key'ini buraya yaz
         // ==========================================
 
         let appSettings = JSON.parse(localStorage.getItem('app_settings')) || {
@@ -396,7 +397,7 @@
                 id: 'Karanlık Güçler', 
                 defaultImg: 'https://images.unsplash.com/photo-1550596334-7bb40a71b6bc?auto=format&fit=crop&q=80&w=1600', 
                 theme: { text: 'text-red-500', border: 'border-red-600/50', bg: 'bg-red-950/30', hover: 'hover:border-red-500 hover:shadow-[0_0_25px_rgba(239,68,68,0.4)]', gradient: 'from-red-950/90 via-black to-black', shadowColor: 'rgba(239, 68, 68, 0.5)' },
-                desc: 'Orta Dünya\'yı gölgeye boğmak isteyen, alev, yıkım og hırsla beslenen kadim şer.'
+                desc: 'Orta Dünya\'yı gölgeye boğmak isteyen, alev, yıkım ve hırsla beslenen kadim şer.'
             },
             { 
                 id: 'Tanrısal Güçler', 
@@ -485,19 +486,18 @@
             { id: 2, title: "Galadriel Hanım", race: "Elfler", tab: "Karakterler", image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=800", desc: "Lothlórien'in Altın Ormanı'nı yöneten Galadriel, Orta Dünya'da kalmış olan en kudretli, en asil Elflerdendir. Güzelliği ve bilgeliği sadece dostlarına rehberlik etmedi, düşmanlarının da kalbine korku saldı...", stats: { weapon: "Aeglos / Nenya", object: "Galadriel'in Aynası", born: "Ağaçlar Çağı" } },
             { id: 3, title: "Küçük Cüce Mîm", race: "Cüceler", tab: "2. Çağ", image: "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&q=80&w=800", desc: "Küçük Cüceler soyunun son temsilcisi olan Mîm'in trajik öyküsü Amon Rûdh'da başlar. Turin Turambar'a sığınak sağlamış ancak daha sonra yakalanıp ihanet etmeye zorlanmıştır. Altın arzusu ve lanetli kaderi onu kaçınılmaz bir sona sürüklemiştir." },
             { id: 4, title: "Saran Alev: Sauron", race: "Karanlık Güçler", tab: "Karakterler", image: "https://images.unsplash.com/photo-1550596334-7bb40a71b6bc?auto=format&fit=crop&q=80&w=1600", desc: "Melkor'un en sadık hizmetkarı olan Maia Sauron, Efendisinin düşüşünün ardından Orta Dünya'yı tamamen hakimiyeti altına almaya çalıştı. Tek Yüzük'ü döverek çağlar boyunca sürecek bir savaşa ve karanlığa imza attı...", stats: { weapon: "Kara Gürz", object: "Tek Yüzük", born: "Zamanın Öncesi (Maiar)" } },
-            { id: 5, title: "Tek Yüzük", race: "Karanlık Güçler", tab: "Emanetler & Eserler", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800", desc: "Sauron tarafından Hüküm Dağı'nın alevlerinde dövülen, diğer tüm Güç Yüzüklerine hükmeden tek og mutlak yüzük. Üzerinde Elf rünleriyle yazılmış kadim bir yazı parıldar: 'Hepsine hükmedecek Bir Yüzük, hepsini o bulacak, hepsini bir araya getirip karanlıkta birbirine bağlayacak.'" },
+            { id: 5, title: "Tek Yüzük", race: "Karanlık Güçler", tab: "Emanetler & Eserler", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800", desc: "Sauron tarafından Hüküm Dağı'nın alevlerinde dövülen, diğer tüm Güç Yüzüklerine hükmeden tek ve mutlak yüzük. Üzerinde Elf rünleriyle yazılmış kadim bir yazı parıldar: 'Hepsine hükmedecek Bir Yüzük, hepsini o bulacak, hepsini bir araya getirip karanlıkta birbirine bağlayacak.'" },
             { id: 6, title: "Ancalagon the Black", race: "Karanlık Güçler", tab: "Bestiary", image: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=800", desc: "Morgoth'un yarattığı en büyük ve en dehşet verici kanatlı ejderha. Öfke Savaşı'nda gökyüzünü kaplayan kara bir bulut gibi yükselmiş, nefesiyle orduları küle çevirmiştir. Sonunda Eärendil tarafından mağlup edilerek Thangorodrim kulelerinin üzerine düşmüş ve kuleleri yerle bir etmiştir." },
             { id: 7, title: "Gondolin'in Düşüşü", race: "Elfler", tab: "Destansı Savaşlar", image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800", desc: "Kral Turgon'un gizli şehri Gondolin'in Maeglin'in ihanetiyle Morgoth'un orduları tarafından keşfedilip kuşatılmasıyla gerçekleşen, Birinci Çağ'ın en trajik savaşı. Ejderhalar, Balroglar ve yüz binlerce ork gizli vadiyi aşarak ak şehri alevler içinde bırakmıştır." },
-            { id: 8, title: "Khazad-dûm (Moria)", race: "Cüceler", tab: "Coğrafya & Mekanlar", image: "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800", desc: "Dumanlı Dağlar'ın kalbinde yer alan, cücelerin en eski, en büyük og en ünlü krallığı. Mithril madenleriyle zenginleşen bu devasa yer altı şehri, cücelerin derinleri çok fazla kazıp Kadim Dehşet Balrog'u uyandırmasıyla karanlığa gömülmüş ve Moria (Kara Çukur) adını almıştır." }
+            { id: 8, title: "Khazad-dûm (Moria)", race: "Cüceler", tab: "Coğrafya & Mekanlar", image: "https://images.unsplash.com/photo-1501183007986-d0d080b147f9?auto=format&fit=crop&q=80&w=800", desc: "Dumanlı Dağlar'ın kalbinde yer alan, cücelerin en eski, en büyük ve en ünlü krallığı. Mithril madenleriyle zenginleşen bu devasa yer altı şehri, cücelerin derinleri çok fazla kazıp Kadim Dehşet Balrog'u uyandırmasıyla karanlığa gömülmüş ve Moria (Kara Çukur) adını almıştır." }
         ];
 
         function initSupabase() {
-            // Öncelik kodun en üstündeki sabit değişkenlerde, yoksa tarayıcı belleğine bak
+            // Sıkı kilit koruması: Kodun en üstündeki sabit değişkenleri veya varsa tarayıcı hafızasını oku
             const url = SUPABASE_URL || localStorage.getItem('sb_url');
             const key = SUPABASE_KEY || localStorage.getItem('sb_key');
             const badge = document.getElementById('db-status-badge');
             
-            // Login Modal arayüzünü Supabase durumuna göre uyarla
             const emailField = document.getElementById('email-field-container');
             const passLabel = document.getElementById('pass-label');
             const passInput = document.getElementById('adminPassword');
@@ -511,7 +511,7 @@
                         badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] tracking-widest border border-emerald-500/30 text-emerald-400 bg-emerald-950/20";
                     }
                     
-                    // Supabase aktifse güvenli E-posta + Şifre moduna geç
+                    // Supabase aktif: Sadece e-posta ve şifreli güvenli giriş aktif edilir
                     if (emailField) emailField.classList.remove('hidden');
                     if (passLabel) passLabel.classList.remove('hidden');
                     if (passInput) {
@@ -520,7 +520,7 @@
                     }
                     if (loginSubtitle) loginSubtitle.textContent = "Supabase Güvenli Oturumu";
                     
-                    // Supabase kilitliyse yönetim panelindeki hassa ayar butonunu gizle
+                    // Supabase kilitliyse yönetim panelindeki hassa ayar butonunu tamamen uçur
                     const sbBtn = document.getElementById('admin-supabase-btn');
                     if (sbBtn && SUPABASE_URL) sbBtn.classList.add('hidden');
                     
@@ -533,7 +533,7 @@
                 badge.className = "hidden sm:inline-block px-3 py-1 rounded text-[10px] tracking-widest border border-red-500/30 text-red-400 bg-red-950/20";
             }
             
-            // Lokal bellek modundaysa klasik test şifresi moduna geri dön
+            // Supabase yok: Klasik test şifresine dön
             if (emailField) emailField.classList.add('hidden');
             if (passLabel) passLabel.classList.add('hidden');
             if (passInput) {
@@ -542,7 +542,6 @@
             }
             if (loginSubtitle) loginSubtitle.textContent = "Giriş izni gereklidir";
             
-            // Sabit bilgi yoksa ayar butonunu göster
             const sbBtn = document.getElementById('admin-supabase-btn');
             if (sbBtn) sbBtn.classList.remove('hidden');
             
@@ -554,7 +553,20 @@
             if (supabaseClient) {
                 try {
                     const { data, error } = await supabaseClient.from('articles').select('*').order('created_at', { ascending: false });
-                    if (!error) { articles = data; render(); return; }
+                    
+                    // Veritabanı canlı ama tamamen boşsa otomatik seeder butonunu göster
+                    const seedBtn = document.getElementById('db-seed-btn');
+                    if (!error && data) {
+                        if (data.length === 0) {
+                            if (seedBtn) seedBtn.classList.remove('hidden');
+                            articles = [...defaultArticles]; // Çökmesin diye fallback veriler yüklendi
+                        } else {
+                            if (seedBtn) seedBtn.classList.add('hidden');
+                            articles = data;
+                        }
+                        render(); 
+                        return; 
+                    }
                 } catch (e) { showToast("Sunucu hatası, lokal bellek yüklendi.", true); }
             }
             const local = localStorage.getItem('local_articles');
@@ -628,6 +640,32 @@
     </script>
 
     <script>
+        // Mistik Veritabanı Doldurucu (Database Seeder)
+        async function seedDatabase() {
+            if (!supabaseClient) {
+                showToast("Lütfen önce canlı bağlantıyı kurun!", true);
+                return;
+            }
+            try {
+                showToast("Veritabanı mühürleniyor... Lütfen bekleyin.");
+                document.getElementById('db-seed-btn').textContent = "⌛ Aktarılıyor...";
+                
+                // defaultArticles dizisindeki elemanları ID'lerinden arındırarak gönderiyoruz (Supabase kendi üretsin)
+                const seedData = defaultArticles.map(({ id, ...rest }) => rest);
+                
+                const { error } = await supabaseClient.from('articles').insert(seedData);
+                if (error) throw error;
+                
+                showToast("Arşiv başarıyla veritabanına aktarıldı!");
+                document.getElementById('db-seed-btn').classList.add('hidden');
+                await fetchArticles();
+            } catch (err) {
+                console.error(err);
+                showToast("Veriler mühürlenemedi!", true);
+                document.getElementById('db-seed-btn').textContent = "⚡ Tekrar Dene";
+            }
+        }
+
         function renderHome() {
             return `
                 <div class="relative h-[65vh] w-full flex flex-col justify-center items-center text-center overflow-hidden border-b border-white/10">
@@ -1080,6 +1118,7 @@
             const emailInput = document.getElementById('adminEmail');
             if (emailInput) emailInput.value = '';
         }
+        
         function closeAdminModal() {
             document.getElementById('loginModal').classList.add('hidden');
             document.getElementById('loginError').classList.add('hidden');
@@ -1528,6 +1567,7 @@
             }
         });
 
+        // Kopyalamayı Engelleme (Copy Protection Guard)
         document.addEventListener('copy', (e) => {
             const activeEl = document.activeElement;
             if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
