@@ -23,6 +23,7 @@
             background-color: #12100e;
             background-image: radial-gradient(circle at 50% 50%, #1e1915 0%, #0f0c0a 100%);
             border: 1px solid rgba(180, 140, 80, 0.15);
+            transition: background-color 0.6s ease-in-out;
         }
         
         /* Yumuşak Sayfa Geçişleri */
@@ -131,6 +132,16 @@
             </div>
         </div>
 
+        <!-- IRK KAPAK BANDI (HERO) - ırk değiştikçe renk/görsel/isim değişir, "yeni bir yere gidilmiş" hissi verir -->
+        <div id="race-hero" class="relative w-full h-48 sm:h-64 rounded-2xl overflow-hidden mb-12 border border-amber-950/30 gold-glow">
+            <div id="race-hero-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-in-out"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10"></div>
+            <div class="absolute inset-0 flex flex-col items-center justify-end pb-6">
+                <h2 id="race-hero-title" class="font-cinzel-dec text-2xl sm:text-4xl tracking-widest drop-shadow-lg transition-colors duration-500">Elfler</h2>
+                <div id="race-hero-underline" class="w-16 h-[2px] mt-3 transition-colors duration-500"></div>
+            </div>
+        </div>
+
         <!-- IRK SEÇİM BARBARLARI (TABS) -->
         <div id="race-tabs" class="flex flex-wrap justify-center gap-3 mb-12"></div>
 
@@ -213,17 +224,43 @@
             <!-- Panel İçerik Formu (Scrollable) -->
             <div class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 font-sans text-xs sm:text-sm">
                 
-                <!-- Üst Alan: Arka Plan Ayarları -->
+                <!-- Üst Alan: Arka Plan ve Renk Paleti Yönetimi (Irka Özel) -->
                 <div class="bg-stone-900/30 border border-amber-950/20 p-4 sm:p-6 rounded-xl space-y-4">
-                    <h4 class="font-cinzel text-xs text-amber-500 uppercase tracking-wider">Arka Plan ve Tasarım Yönetimi</h4>
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <h4 class="font-cinzel text-xs text-amber-500 uppercase tracking-wider">Arka Plan ve Renk Paleti Yönetimi</h4>
+                        <span class="text-[10px] text-stone-500 font-sans">Düzenlenen ırk: <span id="race-editing-label" class="text-amber-400 font-bold">Elfler</span> (ana sayfada ırkı seçip panele öyle gir)</span>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-1.5">Ana Sayfa Arka Plan Görseli</label>
-                            <input type="file" id="bg-home-input" accept="image/*" onchange="uploadBgImage(event, 'home')" class="w-full text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-950/40 file:text-amber-200 hover:file:bg-amber-900/50 cursor-pointer">
+                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-1.5">Zemin Rengi (görsel yoksa kullanılır)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="race-color-input" class="h-10 w-14 bg-transparent border border-zinc-800 rounded cursor-pointer">
+                                <span class="text-[10px] text-stone-500 font-sans">Ana zemin / gradient rengi</span>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-1.5">Mevcut Irk Arka Planı (Seçili Olan)</label>
+                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-1.5">Vurgu Rengi (başlık, kenarlık, ışıma)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="race-accent-input" class="h-10 w-14 bg-transparent border border-zinc-800 rounded cursor-pointer">
+                                <span class="text-[10px] text-stone-500 font-sans">Kart kenarlıkları ve ırk başlığı</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="saveRaceColors()" class="w-full bg-amber-950/40 hover:bg-amber-900/50 border border-amber-700/40 text-amber-300 px-4 py-2 rounded-lg text-xs font-cinzel uppercase tracking-widest transition">
+                        🎨 Bu Irk İçin Renk Paletini Kaydet
+                    </button>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-amber-950/20">
+                        <div>
+                            <label class="block text-zinc-400 text-[10px] uppercase tracking-widest mb-1.5">Irka Özel Arka Plan Görseli</label>
                             <input type="file" id="bg-race-input" accept="image/*" onchange="uploadBgImage(event, 'race')" class="w-full text-stone-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-950/40 file:text-amber-200 hover:file:bg-amber-900/50 cursor-pointer">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="removeRaceBgImage()" class="w-full bg-red-950/20 hover:bg-red-900/30 border border-red-800/40 text-red-300 px-4 py-2.5 rounded-lg text-xs font-cinzel uppercase tracking-widest transition">
+                                🗑️ Görseli Kaldır (Sadece Renge Dön)
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -357,12 +394,12 @@
         // 🔮 KÜTÜPHANE AYARLARI VE GLOBAL STATE
         // =========================================================================
         const IRKLAR = {
-            "Elfler": { glow: "shadow-emerald-500/20", border: "border-emerald-950/40", accent: "text-emerald-400", bg: "#05160e", bgGradient: "radial-gradient(circle, #082417 0%, #030d08 100%)" },
-            "Cüceler": { glow: "shadow-amber-600/20", border: "border-amber-950/40", accent: "text-amber-500", bg: "#160e05", bgGradient: "radial-gradient(circle, #241708 0%, #0d0803 100%)" },
-            "İnsanlar": { glow: "shadow-sky-500/20", border: "border-sky-950/40", accent: "text-sky-400", bg: "#051116", bgGradient: "radial-gradient(circle, #081d24 0%, #030a0d 100%)" },
-            "Hobbitler": { glow: "shadow-lime-600/20", border: "border-lime-950/40", accent: "text-lime-400", bg: "#0d1605", bgGradient: "radial-gradient(circle, #152408 0%, #080d03 100%)" },
-            "Süper Güçler": { glow: "shadow-purple-600/20", border: "border-purple-950/40", accent: "text-purple-400", bg: "#100516", bgGradient: "radial-gradient(circle, #1d0824 0%, #0a030d 100%)" },
-            "Karanlık Güçler": { glow: "shadow-red-600/20", border: "border-red-950/40", accent: "text-red-500", bg: "#140404", bgGradient: "radial-gradient(circle, #200606 0%, #080202 100%)" }
+            "Elfler": { glow: "shadow-emerald-500/20", border: "border-emerald-950/40", accent: "text-emerald-400", bg: "#05160e", bgGradient: "radial-gradient(circle, #082417 0%, #030d08 100%)", accentHex: "#34d399" },
+            "Cüceler": { glow: "shadow-amber-600/20", border: "border-amber-950/40", accent: "text-amber-500", bg: "#160e05", bgGradient: "radial-gradient(circle, #241708 0%, #0d0803 100%)", accentHex: "#f59e0b" },
+            "İnsanlar": { glow: "shadow-sky-500/20", border: "border-sky-950/40", accent: "text-sky-400", bg: "#051116", bgGradient: "radial-gradient(circle, #081d24 0%, #030a0d 100%)", accentHex: "#38bdf8" },
+            "Hobbitler": { glow: "shadow-lime-600/20", border: "border-lime-950/40", accent: "text-lime-400", bg: "#0d1605", bgGradient: "radial-gradient(circle, #152408 0%, #080d03 100%)", accentHex: "#a3e635" },
+            "Süper Güçler": { glow: "shadow-purple-600/20", border: "border-purple-950/40", accent: "text-purple-400", bg: "#100516", bgGradient: "radial-gradient(circle, #1d0824 0%, #0a030d 100%)", accentHex: "#c084fc" },
+            "Karanlık Güçler": { glow: "shadow-red-600/20", border: "border-red-950/40", accent: "text-red-500", bg: "#140404", bgGradient: "radial-gradient(circle, #200606 0%, #080202 100%)", accentHex: "#ef4444" }
         };
 
         const SEKMELER = ["Yazıtlar", "Karakterler", "Görseller"];
@@ -487,39 +524,81 @@
             applyBgStyles();
         }
 
+        // Bir ırk için o an geçerli olan ayarları (görsel, renk, vurgu rengi) döndürür.
+        // Yönetim panelinden kaydedilmiş özel ayar varsa onu, yoksa IRKLAR'daki varsayılanı kullanır.
+        // Eski format (sadece görsel url'si string olarak) ile de geriye dönük uyumludur.
+        function getRaceSettings(race) {
+            const defaults = IRKLAR[race] || IRKLAR["Elfler"];
+            const saved = state.bgSettings.races && state.bgSettings.races[race];
+            if (!saved) {
+                return { image: "", color: defaults.bg, accent: defaults.accentHex };
+            }
+            if (typeof saved === 'string') {
+                // eski format: sadece görsel url'siydi
+                return { image: saved, color: defaults.bg, accent: defaults.accentHex };
+            }
+            return {
+                image: saved.image || "",
+                color: saved.color || defaults.bg,
+                accent: saved.accent || defaults.accentHex
+            };
+        }
+
+        // state.bgSettings'i Supabase'e yazar (arka plan ayarları, renkler, görseller)
+        async function persistBgSettings() {
+            const { data } = await supabaseClient.from('articles').select('id').eq('title', 'SYSTEM_SETTINGS').single();
+            if (data) {
+                const { error } = await supabaseClient.from('articles').update({ stats: state.bgSettings }).eq('title', 'SYSTEM_SETTINGS');
+                if (error) throw error;
+            } else {
+                const { error } = await supabaseClient.from('articles').insert({
+                    title: 'SYSTEM_SETTINGS', desc: 'Ayarlar', race: 'Süper Güçler', tab: 'Yazıtlar', stats: state.bgSettings
+                });
+                if (error) throw error;
+            }
+        }
+
         function applyBgStyles() {
             const body = document.body;
-            const currentRaceData = IRKLAR[state.currentRace];
-            const raceImg = state.bgSettings.races && state.bgSettings.races[state.currentRace];
-            const homeImg = state.bgSettings.home;
+            const rs = getRaceSettings(state.currentRace);
 
-            // Teşhis için: bu satır konsolda hangi arkaplanın seçildiğini gösterir.
-            console.log('[applyBgStyles] ırk:', state.currentRace, '| ırka özel görsel:', raceImg || 'yok', '| genel görsel:', homeImg || 'yok', '| varsayılan renk:', currentRaceData ? currentRaceData.bg : 'IRKLAR EŞLEŞMEDİ!');
+            console.log('[applyBgStyles] ırk:', state.currentRace, '| görsel:', rs.image || 'yok', '| renk:', rs.color, '| vurgu:', rs.accent);
 
-            if (!currentRaceData) {
-                console.error('[applyBgStyles] state.currentRace ("' + state.currentRace + '") IRKLAR listesinde bulunamadı, arkaplan varsayılana düşüyor.');
-            }
-
-            if (raceImg) {
-                // 1. Öncelik: bu ırka özel yüklenmiş görsel
-                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${raceImg}')`;
+            if (rs.image) {
+                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${rs.image}')`;
                 body.style.backgroundSize = "cover";
                 body.style.backgroundAttachment = "fixed";
                 body.style.backgroundPosition = "center";
-            } else if (homeImg) {
-                // 2. Öncelik: genel "Ana Sayfa" görseli (önceden yükleniyor ama hiç kullanılmıyordu)
-                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${homeImg}')`;
-                body.style.backgroundSize = "cover";
-                body.style.backgroundAttachment = "fixed";
-                body.style.backgroundPosition = "center";
-            } else if (currentRaceData) {
-                // 3. Öncelik: ırka özel varsayılan renk paleti / gradient
-                body.style.backgroundColor = currentRaceData.bg;
-                body.style.backgroundImage = currentRaceData.bgGradient;
+            } else {
+                body.style.backgroundColor = rs.color;
+                body.style.backgroundImage = `radial-gradient(circle, ${rs.color} 0%, #030303 100%)`;
                 body.style.backgroundAttachment = "";
                 body.style.backgroundSize = "";
                 body.style.backgroundPosition = "";
             }
+
+            document.documentElement.style.setProperty('--race-accent', rs.accent);
+            updateRaceHeroBanner(rs);
+        }
+
+        // Sayfanın en üstünde ırka göre değişen büyük "kapak" bandı - bir sonraki
+        // sayfaya geçmiş gibi hissettirmesi için renk/görsel + ırk adını gösterir.
+        function updateRaceHeroBanner(rs) {
+            const bgEl = document.getElementById('race-hero-bg');
+            const titleEl = document.getElementById('race-hero-title');
+            const underlineEl = document.getElementById('race-hero-underline');
+            if (!bgEl || !titleEl || !underlineEl) return;
+
+            if (rs.image) {
+                bgEl.style.backgroundImage = `url('${rs.image}')`;
+                bgEl.style.backgroundColor = '';
+            } else {
+                bgEl.style.backgroundImage = 'none';
+                bgEl.style.backgroundColor = rs.color;
+            }
+            titleEl.textContent = state.currentRace;
+            titleEl.style.color = rs.accent;
+            underlineEl.style.backgroundColor = rs.accent;
         }
 
         // =========================================================================
@@ -611,26 +690,49 @@
             const cloudUrl = await uploadToSupabaseStorage(file, 'backgrounds');
             if (!cloudUrl) { showToast("Görsel buluta yüklenemedi.", true); return; }
 
-            if (target === 'home') {
-                state.bgSettings.home = cloudUrl;
-            } else {
-                state.bgSettings.races[state.currentRace] = cloudUrl;
-            }
+            if (!state.bgSettings.races) state.bgSettings.races = {};
+            const rs = getRaceSettings(state.currentRace);
+            state.bgSettings.races[state.currentRace] = { image: cloudUrl, color: rs.color, accent: rs.accent };
 
             try {
-                const { data } = await supabaseClient.from('articles').select('id').eq('title', 'SYSTEM_SETTINGS').single();
-                if (data) {
-                    await supabaseClient.from('articles').update({ stats: state.bgSettings }).eq('title', 'SYSTEM_SETTINGS');
-                } else {
-                    await supabaseClient.from('articles').insert({
-                        title: 'SYSTEM_SETTINGS', desc: 'Ayarlar', race: 'Süper Güçler', tab: 'Yazıtlar', stats: state.bgSettings
-                    });
-                }
+                await persistBgSettings();
                 applyBgStyles();
-                showToast("Arka plan kaydedildi! ✔");
+                showToast(`${state.currentRace} için arka plan görseli kaydedildi! ✔`);
             } catch(e) {
                 console.error("Arka plan kaydetme hatası:", JSON.stringify(e));
                 showToast("Arka plan kaydedilirken hata: " + formatError(e), true);
+            }
+        }
+
+        async function saveRaceColors() {
+            if (!state.bgSettings.races) state.bgSettings.races = {};
+            const rs = getRaceSettings(state.currentRace);
+            const color = document.getElementById('race-color-input').value;
+            const accent = document.getElementById('race-accent-input').value;
+            state.bgSettings.races[state.currentRace] = { image: rs.image, color, accent };
+
+            try {
+                await persistBgSettings();
+                applyBgStyles();
+                showToast(`${state.currentRace} için renk paleti kaydedildi! 🎨`);
+            } catch(e) {
+                console.error("Renk kaydetme hatası:", JSON.stringify(e));
+                showToast("Renk kaydedilirken hata: " + formatError(e), true);
+            }
+        }
+
+        async function removeRaceBgImage() {
+            if (!state.bgSettings.races) state.bgSettings.races = {};
+            const rs = getRaceSettings(state.currentRace);
+            state.bgSettings.races[state.currentRace] = { image: "", color: rs.color, accent: rs.accent };
+
+            try {
+                await persistBgSettings();
+                applyBgStyles();
+                showToast(`${state.currentRace} görseli kaldırıldı, renk paletine dönüldü.`);
+            } catch(e) {
+                console.error("Görsel kaldırma hatası:", JSON.stringify(e));
+                showToast("Görsel kaldırılırken hata: " + formatError(e), true);
             }
         }
 
@@ -891,6 +993,19 @@
             Object.keys(IRKLAR).forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rSel.appendChild(o); });
             const tSel = document.getElementById('a-tab'); tSel.innerHTML = "";
             SEKMELER.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o); });
+            populateRaceColorInputs();
+        }
+
+        // Yönetim panelindeki renk seçicileri, o an ana sayfada seçili olan ırkın
+        // kayıtlı (ya da varsayılan) renkleriyle doldurur.
+        function populateRaceColorInputs() {
+            const rs = getRaceSettings(state.currentRace);
+            const label = document.getElementById('race-editing-label');
+            const colorInput = document.getElementById('race-color-input');
+            const accentInput = document.getElementById('race-accent-input');
+            if (label) label.textContent = state.currentRace;
+            if (colorInput) colorInput.value = rs.color;
+            if (accentInput) accentInput.value = rs.accent;
         }
 
         // =========================================================================
@@ -912,28 +1027,36 @@
                     col.onclick = (e) => { if (e.target.tagName !== 'BUTTON') col.classList.toggle('flipped'); };
                     col.innerHTML = `
                         <div class="flip-card-inner h-full w-full">
-                            <div class="flip-card-front bg-stone-950 border ${IRKLAR[state.currentRace].border} p-6 flex flex-col justify-between items-center gold-glow-hover transition-all">
-                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 shadow-black shadow-lg"><img src="${escapeHtml(art.image)}" class="w-full h-full object-cover object-top"></div>
-                                <h4 class="font-cinzel text-lg text-amber-500">${escapeHtml(art.title)}</h4>
-                                <p class="text-stone-400 text-xs line-clamp-3 italic">"${escapeHtml(art.desc.substring(0, 80))}..."</p>
-                                <span class="text-[10px] text-amber-500/60 uppercase tracking-wider font-sans">✦ İstatistikler / Hikaye İçin Dokun ✦</span>
+                            <div class="flip-card-front border ${IRKLAR[state.currentRace].border} overflow-hidden gold-glow-hover transition-all relative">
+                                <img src="${escapeHtml(art.image)}" class="absolute inset-0 w-full h-full object-cover object-top">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5"></div>
+                                <div class="absolute top-3 right-3 bg-black/60 border border-amber-500/40 text-amber-300 text-[9px] font-sans uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm">Karakter</div>
+                                <div class="absolute bottom-0 left-0 right-0 p-4 text-left">
+                                    <h4 class="font-cinzel text-xl text-amber-400 drop-shadow-md">${escapeHtml(art.title)}</h4>
+                                    <span class="text-[10px] text-stone-300/80 uppercase tracking-widest font-sans">✦ Detaylar İçin Çevir ✦</span>
+                                </div>
                             </div>
-                            <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-6 flex flex-col justify-between">
-                                <div class="border-b border-amber-950 pb-2"><h4 class="font-cinzel text-amber-500">${escapeHtml(art.title)}</h4></div>
-                                <div class="text-xs text-stone-300 text-left space-y-1 font-sans">
-                                    <div>🗡️ Silah: ${art.stats.weapon || 'Bilinmiyor'}</div>
-                                    <div>💍 Eşya: ${art.stats.object || 'Bilinmiyor'}</div>
-                                    <div>📅 Doğum: ${art.stats.born || '3. Çağ'}</div>
+                            <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-5 flex flex-col justify-between overflow-hidden">
+                                <div class="overflow-y-auto">
+                                    <div class="border-b border-amber-950 pb-2 mb-2"><h4 class="font-cinzel text-amber-500">${escapeHtml(art.title)}</h4></div>
+                                    <p class="text-stone-400 text-[11px] italic leading-snug mb-3 line-clamp-3">"${escapeHtml(art.desc.substring(0, 110))}..."</p>
+                                    <div class="text-xs text-stone-300 text-left space-y-1 font-sans mb-3">
+                                        <div>🗡️ Silah: ${escapeHtml(art.stats.weapon || 'Bilinmiyor')}</div>
+                                        <div>💍 Eşya: ${escapeHtml(art.stats.object || 'Bilinmiyor')}</div>
+                                        <div>📅 Doğum: ${escapeHtml(art.stats.born || '3. Çağ')}</div>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-6 gap-1 border-t border-amber-950/40 pt-2 text-[10px] font-sans font-bold text-amber-400">
-                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">STR</span>${art.stats.attributes?.str || 10}</div>
-                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">DEX</span>${art.stats.attributes?.dex || 10}</div>
-                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">CON</span>${art.stats.attributes?.con || 10}</div>
-                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">INT</span>${art.stats.attributes?.int || 10}</div>
-                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">WIS</span>${art.stats.attributes?.wis || 10}</div>
-                                    <div class="text-center"><span class="text-stone-500 block text-[8px]">CHA</span>${art.stats.attributes?.cha || 10}</div>
+                                <div>
+                                    <div class="grid grid-cols-6 gap-1 border-t border-amber-950/40 pt-2 text-[10px] font-sans font-bold text-amber-400 mb-3">
+                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">STR</span>${art.stats.attributes?.str || 10}</div>
+                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">DEX</span>${art.stats.attributes?.dex || 10}</div>
+                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">CON</span>${art.stats.attributes?.con || 10}</div>
+                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">INT</span>${art.stats.attributes?.int || 10}</div>
+                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">WIS</span>${art.stats.attributes?.wis || 10}</div>
+                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">CHA</span>${art.stats.attributes?.cha || 10}</div>
+                                    </div>
+                                    <button onclick="openImmersiveReader(${art.id})" class="w-full bg-amber-950 border border-amber-700/50 text-amber-200 py-1.5 rounded-lg text-xs font-cinzel tracking-widest uppercase hover:bg-amber-900 transition">Hikayeyi Oku</button>
                                 </div>
-                                <button onclick="openImmersiveReader(${art.id})" class="mt-4 bg-amber-950 border border-amber-700/50 text-amber-200 py-1.5 rounded-lg text-xs font-cinzel tracking-widest uppercase hover:bg-amber-900 transition">Hikayeyi Oku</button>
                             </div>
                         </div>`;
                 } else if (state.currentTab === "Görseller") {
