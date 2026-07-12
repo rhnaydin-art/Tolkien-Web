@@ -385,7 +385,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Kullanıcı girdisini HTML'e basmadan önce güvenli hale getirir (XSS koruması)
         function escapeHtml(str) {
             if (str === null || str === undefined) return "";
             return String(str)
@@ -396,9 +395,6 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // Supabase/PostgREST hatalarını (ve her türlü hata şeklini) okunabilir metne çevirir.
-        // err.message bazen boş/iç içe obje olabiliyor, bu yüzden [object Object] yerine
-        // her zaman anlamlı bir string döndürmeyi garanti eder.
         function formatError(err) {
             if (!err) return "Bilinmeyen hata";
             if (typeof err === 'string') return err;
@@ -494,15 +490,35 @@
         function applyBgStyles() {
             const body = document.body;
             const currentRaceData = IRKLAR[state.currentRace];
-            
-            if (state.bgSettings.races && state.bgSettings.races[state.currentRace]) {
-                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${state.bgSettings.races[state.currentRace]}')`;
+            const raceImg = state.bgSettings.races && state.bgSettings.races[state.currentRace];
+            const homeImg = state.bgSettings.home;
+
+            // Teşhis için: bu satır konsolda hangi arkaplanın seçildiğini gösterir.
+            console.log('[applyBgStyles] ırk:', state.currentRace, '| ırka özel görsel:', raceImg || 'yok', '| genel görsel:', homeImg || 'yok', '| varsayılan renk:', currentRaceData ? currentRaceData.bg : 'IRKLAR EŞLEŞMEDİ!');
+
+            if (!currentRaceData) {
+                console.error('[applyBgStyles] state.currentRace ("' + state.currentRace + '") IRKLAR listesinde bulunamadı, arkaplan varsayılana düşüyor.');
+            }
+
+            if (raceImg) {
+                // 1. Öncelik: bu ırka özel yüklenmiş görsel
+                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${raceImg}')`;
                 body.style.backgroundSize = "cover";
                 body.style.backgroundAttachment = "fixed";
                 body.style.backgroundPosition = "center";
-            } else {
+            } else if (homeImg) {
+                // 2. Öncelik: genel "Ana Sayfa" görseli (önceden yükleniyor ama hiç kullanılmıyordu)
+                body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)), url('${homeImg}')`;
+                body.style.backgroundSize = "cover";
+                body.style.backgroundAttachment = "fixed";
+                body.style.backgroundPosition = "center";
+            } else if (currentRaceData) {
+                // 3. Öncelik: ırka özel varsayılan renk paleti / gradient
                 body.style.backgroundColor = currentRaceData.bg;
                 body.style.backgroundImage = currentRaceData.bgGradient;
+                body.style.backgroundAttachment = "";
+                body.style.backgroundSize = "";
+                body.style.backgroundPosition = "";
             }
         }
 
@@ -656,7 +672,6 @@
                     } else if (video.includes('youtu.be/')) {
                         video = `https://www.youtube.com/embed/${video.split('youtu.be/')[1].split('?')[0]}`;
                     }
-                    // zaten /embed/ formatındaysa dokunma
                 }
 
                 let finalImage = imageUrl || tempCoverBase64 || "https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=600&q=80";
@@ -898,7 +913,7 @@
                     col.innerHTML = `
                         <div class="flip-card-inner h-full w-full">
                             <div class="flip-card-front bg-stone-950 border ${IRKLAR[state.currentRace].border} p-6 flex flex-col justify-between items-center gold-glow-hover transition-all">
-                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 shadow-black shadow-lg"><img src="${escapeHtml(art.image)}" class="w-full h-full object-cover"></div>
+                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 shadow-black shadow-lg"><img src="${escapeHtml(art.image)}" class="w-full h-full object-cover object-top"></div>
                                 <h4 class="font-cinzel text-lg text-amber-500">${escapeHtml(art.title)}</h4>
                                 <p class="text-stone-400 text-xs line-clamp-3 italic">"${escapeHtml(art.desc.substring(0, 80))}..."</p>
                                 <span class="text-[10px] text-amber-500/60 uppercase tracking-wider font-sans">✦ İstatistikler / Hikaye İçin Dokun ✦</span>
@@ -941,8 +956,6 @@
             const art = state.articles.find(a => a.id === id); if (!art) return;
             state.activeArticle = art;
 
-            // Önce [gorsel: url] etiketlerini geçici kod adlarıyla ayır,
-            // geri kalan metni escape'le, sonra görselleri güvenli şekilde geri koy.
             const imagePlaceholders = [];
             let safeDesc = art.desc.replace(/\[gorsel:\s*(.*?)\]/g, (m, url) => {
                 imagePlaceholders.push(url.trim());
@@ -976,7 +989,6 @@
             content.className = isErr ? "bg-stone-950/95 border border-red-500/50 text-red-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md max-w-md" : "bg-stone-950/95 border border-amber-500/40 text-amber-200 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md max-w-md";
             box.classList.remove('opacity-0', 'translate-y-10'); box.classList.add('opacity-100', 'translate-y-0');
             clearTimeout(toastT);
-            // Hata mesajları RLS/izin hatası gibi teşhis için önemli olabileceğinden ekranda daha uzun kalır
             const duration = isErr ? 9000 : 3000;
             toastT = setTimeout(() => { box.classList.add('opacity-0', 'translate-y-10'); box.classList.remove('opacity-100', 'translate-y-0'); }, duration);
         }
