@@ -265,9 +265,20 @@
                     </div>
                 </div>
 
+                <!-- Mevcut İçerikler: Düzenle / Sil -->
+                <div class="bg-stone-900/30 border border-amber-950/20 p-4 sm:p-6 rounded-xl space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <h4 class="font-cinzel text-xs text-amber-500 uppercase tracking-wider">Mevcut İçerikler (Düzenle / Sil)</h4>
+                        <input id="admin-search-input" oninput="filterAdminContentList()" placeholder="Başlığa göre ara..." class="bg-black border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 w-full sm:w-56">
+                    </div>
+                    <div id="admin-content-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+                </div>
+
                 <!-- Alt Alan: Yeni İçerik Ekleme -->
                 <div class="space-y-6">
-                    <h4 class="font-cinzel text-xs text-amber-500 uppercase tracking-wider border-b border-stone-900 pb-2">Yeni Yazıt / Karakter Ekle</h4>
+                    <div class="flex items-center justify-between border-b border-stone-900 pb-2">
+                        <h4 id="form-mode-label" class="font-cinzel text-xs text-amber-500 uppercase tracking-wider">Yeni Yazıt / Karakter Ekle</h4>
+                    </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         
@@ -371,11 +382,16 @@
             <!-- Panel Footer -->
             <div class="p-4 sm:p-6 border-t border-amber-950/30 flex justify-between bg-black/40 gap-4">
                 <button onclick="seederInitialData()" class="bg-amber-950/20 hover:bg-amber-900/30 border border-amber-800/40 text-amber-400 px-4 py-2.5 rounded-lg text-xs font-cinzel uppercase tracking-widest transition">
-                    ⚡ Boş Veritabanını Doldur
+                    ⚡ Örnek İçerik Ekle
                 </button>
-                <button id="save-article-btn" onclick="saveArticle()" class="bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-8 py-2.5 rounded-lg text-xs font-cinzel uppercase tracking-widest transition flex items-center gap-2 shadow-lg">
-                    <span>💾 Yazıtı Kaydet</span>
-                </button>
+                <div class="flex gap-3">
+                    <button id="cancel-edit-btn" onclick="cancelEdit()" class="hidden bg-stone-800 hover:bg-stone-700 text-stone-300 px-4 py-2.5 rounded-lg text-xs font-cinzel uppercase tracking-widest transition">
+                        ✕ İptal
+                    </button>
+                    <button id="save-article-btn" onclick="saveArticle()" class="bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-8 py-2.5 rounded-lg text-xs font-cinzel uppercase tracking-widest transition flex items-center gap-2 shadow-lg">
+                        <span>💾 Yazıtı Kaydet</span>
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -501,6 +517,7 @@
                 state.articles = data || [];
                 await loadBgSettings();
                 render();
+                renderAdminContentList(document.getElementById('admin-search-input') ? document.getElementById('admin-search-input').value : "");
             } catch (err) {
                 console.error("Bulut veri çekme hatası:", JSON.stringify(err));
                 showToast("Veriler veritabanından çekilemedi: " + formatError(err), true);
@@ -740,6 +757,7 @@
         // 💾 YENİ MAKALE VE KARAKTER KAYDETME (Düzeltilen Kısım)
         // =========================================================================
         let tempCoverBase64 = "";
+        let editingArticleId = null; // null = yeni içerik ekleniyor, değilse o id güncelleniyor
         async function handleCoverImageUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -800,22 +818,29 @@
                     };
                 }
 
-                const { error } = await supabaseClient.from('articles').insert([{ title, desc, image: finalImage, video, race, tab, stats }]);
+                let error;
+                if (editingArticleId) {
+                    ({ error } = await supabaseClient.from('articles').update({ title, desc, image: finalImage, video, race, tab, stats }).eq('id', editingArticleId));
+                } else {
+                    ({ error } = await supabaseClient.from('articles').insert([{ title, desc, image: finalImage, video, race, tab, stats }]));
+                }
 
                 if (error) {
                     console.error("Kayıt hatası:", JSON.stringify(error));
                     showToast(`Kaydedilemedi: ${formatError(error)}`, true);
                 } else {
-                    showToast("Yazıt buluta nakşedildi! ✔");
-                    resetForm(); closeAdminModal(); loadArticles();
+                    showToast(editingArticleId ? "İçerik güncellendi! ✔" : "Yazıt buluta nakşedildi! ✔");
+                    cancelEdit(false);
+                    closeAdminModal();
+                    loadArticles();
                 }
             } catch (err) {
                 console.error("Kayıt sistem hatası:", JSON.stringify(err));
                 showToast("Kayıt sırasında sistem hatası: " + formatError(err), true);
             } finally {
-                // İşlem başarılı olsa da hata da verse buton hep eski haline dönecek.
-                btn.disabled = false; 
-                btn.innerHTML = `<span>💾 Yazıtı Kaydet</span>`;
+                // İşlem başarılı olsa da hata da verse buton kilidi açılır; etiket düzenleme moduna göre ayarlanır.
+                btn.disabled = false;
+                btn.innerHTML = editingArticleId ? `<span>💾 Güncellemeyi Kaydet</span>` : `<span>💾 Yazıtı Kaydet</span>`;
             }
         }
 
@@ -829,13 +854,121 @@
             tempCoverBase64 = "";
         }
 
+        // Düzenleme modundan çıkıp formu boş "yeni içerik" moduna döndürür.
+        // showMsg=false, saveArticle başarı sonrası sessizce çağırdığında toast basmasın diye.
+        function cancelEdit(showMsg = true) {
+            editingArticleId = null;
+            resetForm();
+            document.getElementById('save-article-btn').innerHTML = `<span>💾 Yazıtı Kaydet</span>`;
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('form-mode-label').textContent = "Yeni Yazıt / Karakter Ekle";
+            if (showMsg) showToast("Düzenleme iptal edildi.");
+        }
+
+        // Var olan bir içeriği düzenleme moduna yükler: tüm alanları doldurur, kaydet
+        // butonunu "güncelle" moduna çevirir.
+        function loadArticleIntoForm(id) {
+            const art = state.articles.find(a => a.id === id);
+            if (!art) { showToast("İçerik bulunamadı, listeyi yenile.", true); return; }
+
+            editingArticleId = id;
+            document.getElementById('a-title').value = art.title || "";
+            document.getElementById('a-desc').value = art.desc || "";
+            document.getElementById('a-race').value = art.race;
+            document.getElementById('a-tab').value = art.tab;
+            document.getElementById('a-video').value = art.video && art.video.includes('/embed/') ? `https://www.youtube.com/watch?v=${art.video.split('/embed/')[1]}` : (art.video || "");
+            document.getElementById('a-image-url').value = art.image || "";
+            document.getElementById('a-image-file').value = "";
+            tempCoverBase64 = "";
+
+            toggleCharacterFields();
+            if (art.tab === "Karakterler" && art.stats) {
+                document.getElementById('c-weapon').value = art.stats.weapon || "";
+                document.getElementById('c-object').value = art.stats.object || "";
+                document.getElementById('c-born').value = art.stats.born || "";
+                const attrs = art.stats.attributes || {};
+                document.getElementById('c-str').value = attrs.str || 10;
+                document.getElementById('c-dex').value = attrs.dex || 10;
+                document.getElementById('c-con').value = attrs.con || 10;
+                document.getElementById('c-int').value = attrs.int || 10;
+                document.getElementById('c-wis').value = attrs.wis || 10;
+                document.getElementById('c-cha').value = attrs.cha || 10;
+            }
+
+            document.getElementById('save-article-btn').innerHTML = `<span>💾 Güncellemeyi Kaydet</span>`;
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            document.getElementById('form-mode-label').textContent = `Düzenleniyor: ${art.title}`;
+            document.getElementById('a-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast(`"${art.title}" düzenleme için yüklendi.`);
+        }
+
+        async function deleteArticleConfirm(id) {
+            const art = state.articles.find(a => a.id === id);
+            if (!art) return;
+            const ok = confirm(`"${art.title}" kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`);
+            if (!ok) return;
+
+            try {
+                const { error } = await supabaseClient.from('articles').delete().eq('id', id);
+                if (error) throw error;
+                showToast(`"${art.title}" silindi.`);
+                if (editingArticleId === id) cancelEdit(false);
+                await loadArticles();
+            } catch (e) {
+                console.error("Silme hatası:", JSON.stringify(e));
+                showToast("Silinemedi: " + formatError(e), true);
+            }
+        }
+
+        // Yönetim panelindeki "Mevcut İçerikler" listesini çizer (SYSTEM_SETTINGS hariç).
+        function renderAdminContentList(filterText = "") {
+            const container = document.getElementById('admin-content-list');
+            if (!container) return;
+            const items = state.articles.filter(a => a.title !== 'SYSTEM_SETTINGS' &&
+                (!filterText || a.title.toLowerCase().includes(filterText.toLowerCase())));
+
+            if (!items.length) {
+                container.innerHTML = `<div class="text-center text-stone-600 text-xs py-6 italic">Eşleşen içerik yok.</div>`;
+                return;
+            }
+
+            container.innerHTML = items.map(a => `
+                <div class="flex items-center gap-3 bg-black/30 border border-stone-900 rounded-lg p-2.5 hover:border-amber-700/40 transition">
+                    <img src="${escapeHtml(a.image)}" class="w-12 h-12 rounded object-cover object-top flex-shrink-0 border border-stone-800">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs text-amber-300 font-semibold truncate">${escapeHtml(a.title)}</div>
+                        <div class="text-[10px] text-stone-500 font-sans">${escapeHtml(a.race)} · ${escapeHtml(a.tab)}</div>
+                    </div>
+                    <button onclick="loadArticleIntoForm(${a.id})" class="text-[10px] bg-sky-950/40 hover:bg-sky-900/50 border border-sky-700/40 text-sky-300 px-2.5 py-1.5 rounded font-sans transition whitespace-nowrap">✏️ Düzenle</button>
+                    <button onclick="deleteArticleConfirm(${a.id})" class="text-[10px] bg-red-950/40 hover:bg-red-900/50 border border-red-700/40 text-red-300 px-2.5 py-1.5 rounded font-sans transition whitespace-nowrap">🗑️ Sil</button>
+                </div>
+            `).join('');
+        }
+
+        function filterAdminContentList() {
+            const val = document.getElementById('admin-search-input').value;
+            renderAdminContentList(val);
+        }
+
         async function seederInitialData() {
             if(!supabaseClient) { showToast("Bağlantı hatası!", true); return;}
+
+            const alreadyExists = state.articles.some(a => a.title === "Galadriel'in Aynası");
+            if (alreadyExists) {
+                showToast("Örnek içerik zaten mevcut, tekrar eklenmedi.", true);
+                return;
+            }
+
             showToast("Hazırlanıyor...");
             const sample = [
                 { title: "Galadriel'in Aynası", desc: "Ayna, geçmişi ve geleceği gösterir.\n\n[gorsel: https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=1200]\n\nLorien Hanımı'nın suyudur.", image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=600", race: "Elfler", tab: "Yazıtlar", stats: null }
             ];
-            await supabaseClient.from('articles').insert(sample);
+            const { error } = await supabaseClient.from('articles').insert(sample);
+            if (error) {
+                console.error("Örnek içerik hatası:", JSON.stringify(error));
+                showToast("Örnek içerik eklenemedi: " + formatError(error), true);
+                return;
+            }
             loadArticles();
         }
 
@@ -994,6 +1127,7 @@
             const tSel = document.getElementById('a-tab'); tSel.innerHTML = "";
             SEKMELER.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o); });
             populateRaceColorInputs();
+            renderAdminContentList();
         }
 
         // Yönetim panelindeki renk seçicileri, o an ana sayfada seçili olan ırkın
