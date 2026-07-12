@@ -385,6 +385,31 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // Kullanıcı girdisini HTML'e basmadan önce güvenli hale getirir (XSS koruması)
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Supabase/PostgREST hatalarını (ve her türlü hata şeklini) okunabilir metne çevirir.
+        // err.message bazen boş/iç içe obje olabiliyor, bu yüzden [object Object] yerine
+        // her zaman anlamlı bir string döndürmeyi garanti eder.
+        function formatError(err) {
+            if (!err) return "Bilinmeyen hata";
+            if (typeof err === 'string') return err;
+            let msg = (typeof err.message === 'string' && err.message) ? err.message : '';
+            if (err.details) msg += (msg ? ' | ' : '') + err.details;
+            if (err.hint) msg += (msg ? ' | ' : '') + 'ipucu: ' + err.hint;
+            if (err.code) msg += (msg ? ' ' : '') + `(kod: ${err.code})`;
+            if (msg) return msg;
+            try { return JSON.stringify(err); } catch (e) { return String(err); }
+        }
+
         // =========================================================================
         // 🔒 KOPYALAMA VE SAĞ TIK ENGELEME KALKANI
         // =========================================================================
@@ -444,8 +469,8 @@
                 await loadBgSettings();
                 render();
             } catch (err) {
-                console.error("Bulut veri çekme hatası:", err);
-                showToast("Veriler veritabanından çekilemedi: " + err.message, true);
+                console.error("Bulut veri çekme hatası:", JSON.stringify(err));
+                showToast("Veriler veritabanından çekilemedi: " + formatError(err), true);
             }
         }
 
@@ -588,8 +613,8 @@
                 applyBgStyles();
                 showToast("Arka plan kaydedildi! ✔");
             } catch(e) {
-                console.error(e);
-                showToast("Arka plan kaydedilirken veritabanı hatası oluştu.", true);
+                console.error("Arka plan kaydetme hatası:", JSON.stringify(e));
+                showToast("Arka plan kaydedilirken hata: " + formatError(e), true);
             }
         }
 
@@ -625,8 +650,13 @@
                 btn.disabled = true; 
                 btn.innerHTML = `<span>⏳ Kaydediliyor...</span>`;
 
-                if (video && video.includes('watch?v=')) {
-                    video = `https://www.youtube.com/embed/${video.split('v=')[1].split('&')[0]}`;
+                if (video) {
+                    if (video.includes('watch?v=')) {
+                        video = `https://www.youtube.com/embed/${video.split('v=')[1].split('&')[0]}`;
+                    } else if (video.includes('youtu.be/')) {
+                        video = `https://www.youtube.com/embed/${video.split('youtu.be/')[1].split('?')[0]}`;
+                    }
+                    // zaten /embed/ formatındaysa dokunma
                 }
 
                 let finalImage = imageUrl || tempCoverBase64 || "https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=600&q=80";
@@ -656,15 +686,15 @@
                 const { error } = await supabaseClient.from('articles').insert([{ title, desc, image: finalImage, video, race, tab, stats }]);
 
                 if (error) {
-                    console.error(error); 
-                    showToast(`Kaydedilemedi: ${error.message}`, true);
+                    console.error("Kayıt hatası:", JSON.stringify(error));
+                    showToast(`Kaydedilemedi: ${formatError(error)}`, true);
                 } else {
                     showToast("Yazıt buluta nakşedildi! ✔");
                     resetForm(); closeAdminModal(); loadArticles();
                 }
             } catch (err) {
-                console.error(err);
-                showToast("Kayıt sırasında sistem hatası: " + err.message, true);
+                console.error("Kayıt sistem hatası:", JSON.stringify(err));
+                showToast("Kayıt sırasında sistem hatası: " + formatError(err), true);
             } finally {
                 // İşlem başarılı olsa da hata da verse buton hep eski haline dönecek.
                 btn.disabled = false; 
@@ -677,6 +707,8 @@
             document.getElementById('a-image-url').value = ""; document.getElementById('a-video').value = "";
             document.getElementById('a-image-file').value = ""; document.getElementById('c-weapon').value = "";
             document.getElementById('c-object').value = ""; document.getElementById('c-born').value = "";
+            ['c-str', 'c-dex', 'c-con', 'c-int', 'c-wis', 'c-cha'].forEach(id => document.getElementById(id).value = "10");
+            document.getElementById('character-fields').classList.add('hidden');
             tempCoverBase64 = "";
         }
 
@@ -754,8 +786,8 @@
                     showToast("Geçit kelimesi yanlış! 🛑", true);
                 }
             } catch (err) {
-                console.error(err);
-                showToast("Sistem hatası: " + err.message, true);
+                console.error("Giriş sistem hatası:", JSON.stringify(err));
+                showToast("Sistem hatası: " + formatError(err), true);
             }
         }
 
@@ -781,8 +813,8 @@
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
                 if (error) {
-                    console.error(error);
-                    showToast(`Hata: ${error.message}`, true);
+                    console.error("Supabase auth hatası:", JSON.stringify(error));
+                    showToast(`Hata: ${formatError(error)}`, true);
                 } else {
                     sessionStorage.setItem('supabase_logged', 'true');
                     document.getElementById('supabase-auth-card').classList.add('hidden');
@@ -791,8 +823,8 @@
                     showToast("Veritabanı bağlantısı kilitlendi. Editör aktif! 🏰⚡");
                 }
             } catch (err) {
-                console.error(err);
-                showToast("Sistem hatası: " + err.message, true);
+                console.error("Auth sistem hatası:", JSON.stringify(err));
+                showToast("Sistem hatası: " + formatError(err), true);
             }
         }
 
@@ -866,13 +898,13 @@
                     col.innerHTML = `
                         <div class="flip-card-inner h-full w-full">
                             <div class="flip-card-front bg-stone-950 border ${IRKLAR[state.currentRace].border} p-6 flex flex-col justify-between items-center gold-glow-hover transition-all">
-                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 shadow-black shadow-lg"><img src="${art.image}" class="w-full h-full object-cover"></div>
-                                <h4 class="font-cinzel text-lg text-amber-500">${art.title}</h4>
-                                <p class="text-stone-400 text-xs line-clamp-3 italic">"${art.desc.substring(0, 80)}..."</p>
+                                <div class="w-24 h-24 rounded-full overflow-hidden border border-amber-500/30 shadow-black shadow-lg"><img src="${escapeHtml(art.image)}" class="w-full h-full object-cover"></div>
+                                <h4 class="font-cinzel text-lg text-amber-500">${escapeHtml(art.title)}</h4>
+                                <p class="text-stone-400 text-xs line-clamp-3 italic">"${escapeHtml(art.desc.substring(0, 80))}..."</p>
                                 <span class="text-[10px] text-amber-500/60 uppercase tracking-wider font-sans">✦ İstatistikler / Hikaye İçin Dokun ✦</span>
                             </div>
                             <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-6 flex flex-col justify-between">
-                                <div class="border-b border-amber-950 pb-2"><h4 class="font-cinzel text-amber-500">${art.title}</h4></div>
+                                <div class="border-b border-amber-950 pb-2"><h4 class="font-cinzel text-amber-500">${escapeHtml(art.title)}</h4></div>
                                 <div class="text-xs text-stone-300 text-left space-y-1 font-sans">
                                     <div>🗡️ Silah: ${art.stats.weapon || 'Bilinmiyor'}</div>
                                     <div>💍 Eşya: ${art.stats.object || 'Bilinmiyor'}</div>
@@ -892,11 +924,11 @@
                 } else if (state.currentTab === "Görseller") {
                     col.className = "bg-stone-950 border " + IRKLAR[state.currentRace].border + " rounded-xl overflow-hidden group hover:border-amber-500/50 cursor-pointer gold-glow-hover transition-all";
                     col.onclick = () => openImmersiveReader(art.id);
-                    col.innerHTML = `<div class="h-64 overflow-hidden relative"><img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex items-end p-4"><h4 class="font-cinzel text-amber-500">${art.title}</h4></div></div>`;
+                    col.innerHTML = `<div class="h-64 overflow-hidden relative"><img src="${escapeHtml(art.image)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex items-end p-4"><h4 class="font-cinzel text-amber-500">${escapeHtml(art.title)}</h4></div></div>`;
                 } else {
                     col.className = "bg-stone-950 border " + IRKLAR[state.currentRace].border + " p-6 rounded-xl flex flex-col justify-between group hover:border-amber-500/50 cursor-pointer gold-glow-hover transition-all";
                     col.onclick = () => openImmersiveReader(art.id);
-                    col.innerHTML = `<div class="space-y-4"><div class="h-44 rounded-lg overflow-hidden border border-stone-900"><img src="${art.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div><h4 class="font-cinzel text-lg text-amber-500">${art.title}</h4><p class="text-stone-400 text-sm line-clamp-3 italic">"${art.desc.substring(0, 120)}..."</p></div><div class="flex justify-between border-t border-stone-900/40 pt-3 mt-4 text-[10px] text-stone-500 uppercase tracking-wider"><span>📜 ${art.tab}</span><span class="text-amber-500">Oku →</span></div>`;
+                    col.innerHTML = `<div class="space-y-4"><div class="h-44 rounded-lg overflow-hidden border border-stone-900"><img src="${escapeHtml(art.image)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div><h4 class="font-cinzel text-lg text-amber-500">${escapeHtml(art.title)}</h4><p class="text-stone-400 text-sm line-clamp-3 italic">"${escapeHtml(art.desc.substring(0, 120))}..."</p></div><div class="flex justify-between border-t border-stone-900/40 pt-3 mt-4 text-[10px] text-stone-500 uppercase tracking-wider"><span>📜 ${escapeHtml(art.tab)}</span><span class="text-amber-500">Oku →</span></div>`;
                 }
                 grid.appendChild(col);
             });
@@ -908,13 +940,25 @@
         function openImmersiveReader(id) {
             const art = state.articles.find(a => a.id === id); if (!art) return;
             state.activeArticle = art;
-            let desc = art.desc.replace(/\[gorsel:\s*(.*?)\]/g, (m, url) => `<div class="my-6 border border-amber-950/30 rounded-xl overflow-hidden bg-black/40 p-2 max-w-xl mx-auto"><img src="${url.trim()}" class="w-full object-cover rounded-lg max-h-[450px]"></div>`);
-            const paras = desc.split('\n\n').map(p => p.trim().startsWith('<div') ? p : `<p class="mb-5 leading-relaxed text-stone-300 text-lg text-justify">${p.trim()}</p>`).join('');
-            
+
+            // Önce [gorsel: url] etiketlerini geçici kod adlarıyla ayır,
+            // geri kalan metni escape'le, sonra görselleri güvenli şekilde geri koy.
+            const imagePlaceholders = [];
+            let safeDesc = art.desc.replace(/\[gorsel:\s*(.*?)\]/g, (m, url) => {
+                imagePlaceholders.push(url.trim());
+                return `@@IMG_${imagePlaceholders.length - 1}@@`;
+            });
+            safeDesc = escapeHtml(safeDesc);
+            safeDesc = safeDesc.replace(/@@IMG_(\d+)@@/g, (m, idx) => {
+                const url = imagePlaceholders[parseInt(idx)];
+                return `<div class="my-6 border border-amber-950/30 rounded-xl overflow-hidden bg-black/40 p-2 max-w-xl mx-auto"><img src="${escapeHtml(url)}" class="w-full object-cover rounded-lg max-h-[450px]"></div>`;
+            });
+            const paras = safeDesc.split('\n\n').map(p => p.trim().startsWith('<div') ? p : `<p class="mb-5 leading-relaxed text-stone-300 text-lg text-justify">${p.trim()}</p>`).join('');
+
             document.getElementById('reader-content').innerHTML = `
-                <div class="text-center mb-8 border-b border-amber-950/30 pb-6"><h2 class="font-cinzel text-3xl sm:text-4xl text-amber-500 mb-2">${art.title}</h2><span class="text-[10px] text-stone-500 font-sans uppercase tracking-widest">${art.race} | ${art.tab}</span></div>
+                <div class="text-center mb-8 border-b border-amber-950/30 pb-6"><h2 class="font-cinzel text-3xl sm:text-4xl text-amber-500 mb-2">${escapeHtml(art.title)}</h2><span class="text-[10px] text-stone-500 font-sans uppercase tracking-widest">${escapeHtml(art.race)} | ${escapeHtml(art.tab)}</span></div>
                 <div class="prose prose-invert max-w-none">${paras}</div>
-                ${art.video ? `<div class="mt-8 pt-6 border-t border-amber-950/20"><div class="aspect-video max-w-xl mx-auto rounded-xl overflow-hidden border border-amber-900/30 shadow-2xl"><iframe class="w-full h-full" src="${art.video}" frameborder="0" allowfullscreen></iframe></div></div>` : ''}
+                ${art.video ? `<div class="mt-8 pt-6 border-t border-amber-950/20"><div class="aspect-video max-w-xl mx-auto rounded-xl overflow-hidden border border-amber-900/30 shadow-2xl"><iframe class="w-full h-full" src="${escapeHtml(art.video)}" frameborder="0" allowfullscreen></iframe></div></div>` : ''}
             `;
             document.getElementById('view-home').classList.add('hidden');
             document.getElementById('view-article').classList.remove('hidden');
@@ -929,9 +973,12 @@
             const box = document.getElementById('toast-box'); const content = document.getElementById('toast-content');
             document.getElementById('toast-text').textContent = text;
             document.getElementById('toast-icon').textContent = isErr ? "🛑" : "📜";
-            content.className = isErr ? "bg-stone-950/95 border border-red-500/50 text-red-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md" : "bg-stone-950/95 border border-amber-500/40 text-amber-200 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md";
+            content.className = isErr ? "bg-stone-950/95 border border-red-500/50 text-red-300 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md max-w-md" : "bg-stone-950/95 border border-amber-500/40 text-amber-200 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-sans text-sm backdrop-blur-md max-w-md";
             box.classList.remove('opacity-0', 'translate-y-10'); box.classList.add('opacity-100', 'translate-y-0');
-            clearTimeout(toastT); toastT = setTimeout(() => { box.classList.add('opacity-0', 'translate-y-10'); box.classList.remove('opacity-100', 'translate-y-0'); }, 3000);
+            clearTimeout(toastT);
+            // Hata mesajları RLS/izin hatası gibi teşhis için önemli olabileceğinden ekranda daha uzun kalır
+            const duration = isErr ? 9000 : 3000;
+            toastT = setTimeout(() => { box.classList.add('opacity-0', 'translate-y-10'); box.classList.remove('opacity-100', 'translate-y-0'); }, duration);
         }
     </script>
 </body>
