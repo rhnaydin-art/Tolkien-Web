@@ -161,6 +161,12 @@
         <article id="reader-content" class="bg-black/20 border border-amber-950/20 p-6 sm:p-12 rounded-2xl gold-glow relative">
             <!-- İçerik dinamik olarak buraya basılacak -->
         </article>
+
+        <!-- Aynı sekmedeki diğer içerikler arasında sayfadan çıkmadan geçiş -->
+        <div id="reader-siblings-wrap" class="mt-10 pt-8 border-t border-amber-950/20 hidden">
+            <h3 class="font-cinzel text-xs text-amber-500/70 uppercase tracking-widest mb-4 text-center">Diğerlerine Göz At</h3>
+            <div id="reader-siblings" class="flex gap-3 overflow-x-auto pb-2"></div>
+        </div>
         
         <div class="text-center mt-12">
             <button onclick="navigate('home')" class="font-cinzel text-xs uppercase tracking-widest text-amber-500 border border-amber-900/50 hover:bg-amber-950/30 px-6 py-3 rounded-lg transition duration-300">
@@ -410,6 +416,7 @@
         // 🔮 KÜTÜPHANE AYARLARI VE GLOBAL STATE
         // =========================================================================
         const IRKLAR = {
+            "Tüm İçerikler": { glow: "shadow-amber-500/20", border: "border-amber-800/40", accent: "text-amber-300", bg: "#151008", bgGradient: "radial-gradient(circle, #241b0f 0%, #0d0904 100%)", accentHex: "#fbbf24" },
             "Elfler": { glow: "shadow-emerald-500/20", border: "border-emerald-950/40", accent: "text-emerald-400", bg: "#05160e", bgGradient: "radial-gradient(circle, #082417 0%, #030d08 100%)", accentHex: "#34d399" },
             "Cüceler": { glow: "shadow-amber-600/20", border: "border-amber-950/40", accent: "text-amber-500", bg: "#160e05", bgGradient: "radial-gradient(circle, #241708 0%, #0d0803 100%)", accentHex: "#f59e0b" },
             "İnsanlar": { glow: "shadow-sky-500/20", border: "border-sky-950/40", accent: "text-sky-400", bg: "#051116", bgGradient: "radial-gradient(circle, #081d24 0%, #030a0d 100%)", accentHex: "#38bdf8" },
@@ -1100,7 +1107,7 @@
             Object.keys(IRKLAR).forEach(r => {
                 const btn = document.createElement('button');
                 btn.className = `font-cinzel text-xs tracking-widest px-5 py-2.5 rounded-lg border border-stone-800 bg-black/30 transition ${state.currentRace === r ? 'border-amber-600 text-amber-400 gold-glow font-bold' : 'text-stone-500 hover:text-stone-300'}`;
-                btn.textContent = r;
+                btn.textContent = r === "Tüm İçerikler" ? "🌐 " + r : r;
                 btn.onclick = () => { state.currentRace = r; buildRaceTabs(); applyBgStyles(); render(); };
                 container.appendChild(btn);
             });
@@ -1123,7 +1130,7 @@
 
         function populateAdminOptions() {
             const rSel = document.getElementById('a-race'); rSel.innerHTML = "";
-            Object.keys(IRKLAR).forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rSel.appendChild(o); });
+            Object.keys(IRKLAR).filter(r => r !== "Tüm İçerikler").forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rSel.appendChild(o); });
             const tSel = document.getElementById('a-tab'); tSel.innerHTML = "";
             SEKMELER.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o); });
             populateRaceColorInputs();
@@ -1147,7 +1154,7 @@
         // =========================================================================
         function render() {
             const grid = document.getElementById('articles-grid'); grid.innerHTML = "";
-            const filtered = state.articles.filter(a => a.title !== 'SYSTEM_SETTINGS' && a.race === state.currentRace && a.tab === state.currentTab);
+            const filtered = state.articles.filter(a => a.title !== 'SYSTEM_SETTINGS' && a.tab === state.currentTab && (state.currentRace === "Tüm İçerikler" || a.race === state.currentRace));
 
             if (!filtered.length) {
                 grid.innerHTML = `<div class="col-span-full text-center py-16 text-stone-600 italic border border-dashed border-stone-900 rounded-2xl">Kütüphanenin bu rafı henüz boş...</div>`;
@@ -1157,41 +1164,15 @@
             filtered.forEach(art => {
                 const col = document.createElement('div');
                 if (state.currentTab === "Karakterler" && art.stats) {
-                    col.className = "flip-card h-96 w-full cursor-pointer";
-                    col.onclick = (e) => { if (e.target.tagName !== 'BUTTON') col.classList.toggle('flipped'); };
+                    col.className = "bg-stone-950 border " + IRKLAR[state.currentRace].border + " rounded-xl overflow-hidden group hover:border-amber-500/50 cursor-pointer gold-glow-hover transition-all relative h-80";
+                    col.onclick = () => openImmersiveReader(art.id);
                     col.innerHTML = `
-                        <div class="flip-card-inner h-full w-full">
-                            <div class="flip-card-front border ${IRKLAR[state.currentRace].border} overflow-hidden gold-glow-hover transition-all relative">
-                                <img src="${escapeHtml(art.image)}" class="absolute inset-0 w-full h-full object-cover object-top">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5"></div>
-                                <div class="absolute top-3 right-3 bg-black/60 border border-amber-500/40 text-amber-300 text-[9px] font-sans uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm">Karakter</div>
-                                <div class="absolute bottom-0 left-0 right-0 p-4 text-left">
-                                    <h4 class="font-cinzel text-xl text-amber-400 drop-shadow-md">${escapeHtml(art.title)}</h4>
-                                    <span class="text-[10px] text-stone-300/80 uppercase tracking-widest font-sans">✦ Detaylar İçin Çevir ✦</span>
-                                </div>
-                            </div>
-                            <div class="flip-card-back bg-stone-950 border border-amber-500/40 p-5 flex flex-col justify-between overflow-hidden">
-                                <div class="overflow-y-auto">
-                                    <div class="border-b border-amber-950 pb-2 mb-2"><h4 class="font-cinzel text-amber-500">${escapeHtml(art.title)}</h4></div>
-                                    <p class="text-stone-400 text-[11px] italic leading-snug mb-3 line-clamp-3">"${escapeHtml(art.desc.substring(0, 110))}..."</p>
-                                    <div class="text-xs text-stone-300 text-left space-y-1 font-sans mb-3">
-                                        <div>🗡️ Silah: ${escapeHtml(art.stats.weapon || 'Bilinmiyor')}</div>
-                                        <div>💍 Eşya: ${escapeHtml(art.stats.object || 'Bilinmiyor')}</div>
-                                        <div>📅 Doğum: ${escapeHtml(art.stats.born || '3. Çağ')}</div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="grid grid-cols-6 gap-1 border-t border-amber-950/40 pt-2 text-[10px] font-sans font-bold text-amber-400 mb-3">
-                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">STR</span>${art.stats.attributes?.str || 10}</div>
-                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">DEX</span>${art.stats.attributes?.dex || 10}</div>
-                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">CON</span>${art.stats.attributes?.con || 10}</div>
-                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">INT</span>${art.stats.attributes?.int || 10}</div>
-                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">WIS</span>${art.stats.attributes?.wis || 10}</div>
-                                        <div class="text-center"><span class="text-stone-500 block text-[8px]">CHA</span>${art.stats.attributes?.cha || 10}</div>
-                                    </div>
-                                    <button onclick="openImmersiveReader(${art.id})" class="w-full bg-amber-950 border border-amber-700/50 text-amber-200 py-1.5 rounded-lg text-xs font-cinzel tracking-widest uppercase hover:bg-amber-900 transition">Hikayeyi Oku</button>
-                                </div>
-                            </div>
+                        <img src="${escapeHtml(art.image)}" class="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/5"></div>
+                        <div class="absolute top-3 right-3 bg-black/60 border border-amber-500/40 text-amber-300 text-[9px] font-sans uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm">Karakter</div>
+                        <div class="absolute bottom-0 left-0 right-0 p-4 text-left">
+                            <h4 class="font-cinzel text-lg text-amber-400 drop-shadow-md">${escapeHtml(art.title)}</h4>
+                            <span class="text-[10px] text-stone-300/80 uppercase tracking-widest font-sans">${escapeHtml(art.stats.born || 'Detaylar için dokun')}</span>
                         </div>`;
                 } else if (state.currentTab === "Görseller") {
                     col.className = "bg-stone-950 border " + IRKLAR[state.currentRace].border + " rounded-xl overflow-hidden group hover:border-amber-500/50 cursor-pointer gold-glow-hover transition-all";
@@ -1225,14 +1206,55 @@
             });
             const paras = safeDesc.split('\n\n').map(p => p.trim().startsWith('<div') ? p : `<p class="mb-5 leading-relaxed text-stone-300 text-lg text-justify">${p.trim()}</p>`).join('');
 
+            const statsBlock = (art.tab === "Karakterler" && art.stats) ? `
+                <div class="mb-8 bg-black/30 border border-amber-950/30 rounded-2xl p-5 sm:p-6">
+                    <h3 class="font-cinzel text-xs text-amber-500 uppercase tracking-widest mb-4 border-b border-amber-950/30 pb-2">Karakter Bilgileri</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-stone-300 font-sans mb-4">
+                        <div>🗡️ Silah: <span class="text-stone-100">${escapeHtml(art.stats.weapon || 'Bilinmiyor')}</span></div>
+                        <div>💍 Eşya: <span class="text-stone-100">${escapeHtml(art.stats.object || 'Bilinmiyor')}</span></div>
+                        <div>📅 Doğum: <span class="text-stone-100">${escapeHtml(art.stats.born || '3. Çağ')}</span></div>
+                    </div>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center font-sans font-bold text-amber-400 text-xs">
+                        <div class="bg-stone-900/60 rounded-lg py-2"><span class="text-stone-500 block text-[9px]">STR</span>${art.stats.attributes?.str || 10}</div>
+                        <div class="bg-stone-900/60 rounded-lg py-2"><span class="text-stone-500 block text-[9px]">DEX</span>${art.stats.attributes?.dex || 10}</div>
+                        <div class="bg-stone-900/60 rounded-lg py-2"><span class="text-stone-500 block text-[9px]">CON</span>${art.stats.attributes?.con || 10}</div>
+                        <div class="bg-stone-900/60 rounded-lg py-2"><span class="text-stone-500 block text-[9px]">INT</span>${art.stats.attributes?.int || 10}</div>
+                        <div class="bg-stone-900/60 rounded-lg py-2"><span class="text-stone-500 block text-[9px]">WIS</span>${art.stats.attributes?.wis || 10}</div>
+                        <div class="bg-stone-900/60 rounded-lg py-2"><span class="text-stone-500 block text-[9px]">CHA</span>${art.stats.attributes?.cha || 10}</div>
+                    </div>
+                </div>` : '';
+
             document.getElementById('reader-content').innerHTML = `
                 <div class="text-center mb-8 border-b border-amber-950/30 pb-6"><h2 class="font-cinzel text-3xl sm:text-4xl text-amber-500 mb-2">${escapeHtml(art.title)}</h2><span class="text-[10px] text-stone-500 font-sans uppercase tracking-widest">${escapeHtml(art.race)} | ${escapeHtml(art.tab)}</span></div>
+                ${statsBlock}
                 <div class="prose prose-invert max-w-none">${paras}</div>
                 ${art.video ? `<div class="mt-8 pt-6 border-t border-amber-950/20"><div class="aspect-video max-w-xl mx-auto rounded-xl overflow-hidden border border-amber-900/30 shadow-2xl"><iframe class="w-full h-full" src="${escapeHtml(art.video)}" frameborder="0" allowfullscreen></iframe></div></div>` : ''}
             `;
             document.getElementById('view-home').classList.add('hidden');
             document.getElementById('view-article').classList.remove('hidden');
+            renderReaderSiblings(art);
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Aynı sekmedeki (ör. tüm Karakterler) diğer içerikleri küçük thumbnail'ler olarak
+        // okuyucunun altına dizer; sayfadan çıkmadan diğerine geçiş sağlar.
+        function renderReaderSiblings(art) {
+            const wrap = document.getElementById('reader-siblings-wrap');
+            const container = document.getElementById('reader-siblings');
+            if (!wrap || !container) return;
+
+            const siblings = state.articles.filter(a => a.title !== 'SYSTEM_SETTINGS' && a.tab === art.tab && a.id !== art.id);
+            if (!siblings.length) { wrap.classList.add('hidden'); container.innerHTML = ''; return; }
+
+            wrap.classList.remove('hidden');
+            container.innerHTML = siblings.map(s => `
+                <div onclick="openImmersiveReader(${s.id})" class="flex-shrink-0 w-28 cursor-pointer group">
+                    <div class="h-28 rounded-lg overflow-hidden border-2 ${s.id === art.id ? 'border-amber-500' : 'border-stone-800'} group-hover:border-amber-500/60 transition">
+                        <img src="${escapeHtml(s.image)}" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500">
+                    </div>
+                    <div class="text-[10px] text-stone-400 group-hover:text-amber-400 text-center mt-1.5 truncate transition font-sans">${escapeHtml(s.title)}</div>
+                </div>
+            `).join('');
         }
 
         // =========================================================================
